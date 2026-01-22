@@ -9,10 +9,10 @@ class Polynome:
         :param c: A list of real numbers.
         """
 
-        self.c = c
+        while len(c) > 1 and c[-1] == 0:
+            c.pop()
 
-        while len(self.c) > 1 and self.c[-1] == 0:
-            self.c.pop()
+        self.c = tuple(c)
 
         self.len = len(self.c)
 
