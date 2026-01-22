@@ -15,9 +15,17 @@ class Polynome:
     def vect(self):
         return self.c
 
-    def img(self, x):
-        for i in range(len(self.c)):
-            """"""
+    def __call__(self, x):
+        Polynome.count__img += 1
+
+        n = self.len
+
+        value = self.c[n - 1]
+
+        for i in range(n - 2, -1, -1):
+            value = value * x + self.c[i]
+
+        return value
 
     def __add__(self, Q):
         Z = []
