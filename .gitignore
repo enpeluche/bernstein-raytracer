@@ -1,0 +1,3 @@
+benchmarks
+*.png
+__pycache__
