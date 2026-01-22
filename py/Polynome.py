@@ -1,5 +1,11 @@
 class Polynome:
     def __init__(self, c):
+        """
+        Create a Polynomial with coefficients in ascending order of power.
+        (where c[0] is the constant term).
+
+        :param c: A list of real numbers.
+        """
 
         self.c = c
 
@@ -13,6 +19,11 @@ class Polynome:
         return self.c
 
     def __call__(self, x):
+        """
+        Implements Hörner methods.
+
+        :param x: a real number
+        """
 
         n = self.len
 
