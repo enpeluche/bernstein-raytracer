@@ -1,4 +1,6 @@
 class Polynome:
+    __slots__ = ("c", "len")
+
     def __init__(self, c):
         """
         Create a Polynomial with coefficients in ascending order of power.
