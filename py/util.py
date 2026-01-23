@@ -4,6 +4,7 @@ import math
 def normalize3(v):
     """
     Normalise un vecteur 3D pour lui donner une longueur de 1.
+    Plus de détails sur cette fonction sont dans le README.
 
     Args:
         v (tuple): Un tuple de 3 flottants représentant le vecteur.
@@ -26,6 +27,7 @@ def normalize3(v):
 def clamp(m, M, x):
     """
     Restreint v à l'intervalle [m, M].
+    Plus de détails sur cette fonction sont dans le README.
 
     Args:
         m (float): La borne inférieure.
@@ -45,6 +47,8 @@ def interpole(x1, y1, x2, y2, x):
     Cette fonction utilise la forme de Lagrange pour un polynôme de degré 1
     afin de projeter la valeur d'un intervalle source vers un intervalle cible.
 
+    Plus de détails sur cette fonction sont dans le README.
+
     Args:
         x1 (float): Abscisse du premier point de contrôle.
         y1 (float): Ordonnée du premier point de contrôle (valeur cible).
@@ -56,5 +60,7 @@ def interpole(x1, y1, x2, y2, x):
         float: La valeur interpolée y correspondant à x.
     """
     x1, y1, x2, y2, x = float(x1), float(y1), float(x2), float(y2), float(x)
+
+    assert x1 != x2
 
     return ((x - x2) / (x1 - x2)) * y1 + ((x - x1) / (x2 - x1)) * y2
