@@ -3,4 +3,5 @@ benchmarks
 *.gif
 *.md
 *.txt
+*.prof
 __pycache__
