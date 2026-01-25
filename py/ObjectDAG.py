@@ -76,12 +76,9 @@ class RomanDAG(M):
 #fmt : on
 
 class SphereDAG(M):
-    __slots__ = ("cx", "cy", "cz", "r2")
+    __slots__ = ("r2")
 
-    def __init__(self, cx, cy, cz, r):
-        self.cx = float(cx)
-        self.cy = float(cy)
-        self.cz = float(cz)
+    def __init__(self, r):
         self.r2 = float(r * r)
 
     def to_poly(self, dico):
@@ -104,25 +101,21 @@ class SphereDAG(M):
         sz = pz[0]
         dz = pz[1] if len(pz) > 1 else 0.0
 
-        lx = sx - self.cx
-        ly = sy - self.cy
-        lz = sz - self.cz
-
         a = dx * dx + dy * dy + dz * dz
-        b = 2.0 * (lx * dx + ly * dy + lz * dz)
-        c = (lx * lx + ly * ly + lz * lz) - self.r2
+        b = 2.0 * (sx * dx + sy * dy + sz * dz)
+        c = (sx * sx + sy * sy + sz * sz) - self.r2
 
         return Polynome([c, b, a])
 
     def derivee(self, nom):
         if nom == "x":
-            return Mult(Nb(2.0), Plus(Var("x"), Nb(-self.cx)))
+            return Mult(Nb(2.0), Var("x"))
 
         elif nom == "y":
-            return Mult(Nb(2.0), Plus(Var("y"), Nb(-self.cy)))
+            return Mult(Nb(2.0), Var("y"))
 
         elif nom == "z":
-            return Mult(Nb(2.0), Plus(Var("z"), Nb(-self.cz)))
+            return Mult(Nb(2.0), Var("z"))
 
         else:
             return Nb(0.0)
