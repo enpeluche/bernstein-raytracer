@@ -64,39 +64,39 @@ def inter(A, B):
 
 
 def differ(A, B):
-    if None == A:
-        return None
+    if A == []:
+        return []
 
-    elif None == B:
+    if not B:
         return A
 
     else:
-        (ta, qa) = (hd(A), tl(A))
-        (tb, qb) = (hd(B), tl(B))
-        (a1, a2) = (ta.a.t, ta.b.t)
-        (b1, b2) = (tb.a.t, tb.b.t)
+        [a1, a2] = [A[0].a.t, A[0].b.t]
+        [b1, b2] = [B[0].a.t, B[0].b.t]
 
         assert a1 <= a2
         assert b1 <= b2
 
         if b2 <= a1:
-            return differ(A, tl(B))
+            return differ(A, B[1:])
 
         elif a2 <= b1:
-            return ta, differ(tl(A), B)
+            return [A[0]] + differ(A[1:], B)
 
         elif b1 <= a1:
             if b2 <= a2:
-                return differ(((b2, a2), tl(A)), tl(B))
+                return differ([Intervalle(B[0].b, A[0].b)] + A[1:], B[1:])
 
             else:
-                return differ(tl(A), B)
+                return differ(A[1:], B)
 
         elif a2 <= b2:
-            return ((a1, b1), differ(tl(A), B))
+            return [Intervalle(A[0].a, B[0].a)] + differ(A[1:], B)
 
         else:
-            return ((a1, b1), differ(((b2, a2), tl(A)), tl(B)))
+            return [Intervalle(A[0].a, B[0].a)] + differ(
+                [Intervalle(B[0].b, A[0].b)] + A[1:], B[1:]
+            )
 
 
 def union1D(A, B):
