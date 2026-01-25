@@ -77,6 +77,9 @@ class OrthographicCamera(Camera):
         )
 
 
+# 1.0 = Grand angle (type GoPro)
+# 2.0 = Vue standard (humain)
+# 5.0 = Zoom (Téléobjectif)
 class CameraPerspective(Camera):
     """
     CameraPerspective simule l'oeil humain en fixant l'origine du rayon mais faisant varier sa direction.
