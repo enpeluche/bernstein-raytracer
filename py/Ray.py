@@ -1,3 +1,6 @@
+from Matrix import Matrix
+
+
 class Ray(object):
     """
     Représentation mathématique d'un rayon lumineux.
@@ -12,8 +15,31 @@ class Ray(object):
         """
         Initialise un nouveau rayon.
 
-        :param source: Un triplet (sx, sy, sz) de R^3 représentant le point d'origine du rayon.
-        :param dir: Un triplet (dx, dy, dz) de R^3 représentant le vecteur de direction du rayon.
+        Args:
+            source (tuple[float, float, float]): Le point d'origine du rayon.
+            dir (tuple[float, float, float]) :Le vecteur de direction du rayon.
         """
         self.origin = origin
         self.direction = direction
+
+    def transform(self, T):
+        """
+        Transforme le rayon en un nouveau rayon.
+
+        Args:
+            T (Transformation): Une transformation homogène.
+        """
+
+        (sx, sy, sz) = self.origin
+        origin_mat = Matrix([[sx], [sy], [sz], [1]])
+
+        (dx, dy, dz) = self.direction
+        direction_mat = Matrix([[dx], [dy], [dz], [0]])
+
+        transformed_origin_mat = T.forward * origin_mat
+        transformed_direction_mat = T.forward * direction_mat
+
+        return Ray(
+            transformed_origin_mat.to_tuple()[:3],
+            transformed_direction_mat.to_tuple()[:3],
+        )
