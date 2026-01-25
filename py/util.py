@@ -7,7 +7,7 @@ def normalize3(v):
     Plus de détails sur cette fonction sont dans le README.
 
     Args:
-        v (tuple): Un tuple de 3 flottants représentant le vecteur.
+        v (tuple[float, float, float]): Le vecteur à normaliser.
 
     Returns:
         tuple: Un nouveau tuple de même direction mais de norme 1.
