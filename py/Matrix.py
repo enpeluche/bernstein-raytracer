@@ -91,5 +91,10 @@ class Matrix:
 
         return tuple(self[i, 0] for i in range(self.rows))
 
+    def transpose(self):
+        return Matrix(
+            [[self[j, i] for j in range(self.rows)] for i in range(self.cols)]
+        )
+
     def __str__(self):
         return "\n".join([str(row) for row in self.mat])
