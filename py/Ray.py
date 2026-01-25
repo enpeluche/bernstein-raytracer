@@ -1,7 +1,7 @@
 from Matrix import Matrix
 
 
-class Ray(object):
+class Ray:
     """
     Représentation mathématique d'un rayon lumineux.
 
