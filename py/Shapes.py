@@ -19,4 +19,12 @@ class Tore(Prim):
 
         bbox = AABB((-r - R, -r, -r - R), (r + R, r, r + R))
 
-        super().__init__(ToreDAG(r, R), (33, 144, 222), T, bbox)
+        super().__init__(ToreDAG(r, R), color, T, bbox)
+
+
+class Roman(Prim):
+    def __init__(self, T=None, color=None):
+
+        bbox = AABB((-1, -1, -1), (1, 1, 1))
+
+        super().__init__(RomanDAG(), (33, 144, 222), T, bbox)
