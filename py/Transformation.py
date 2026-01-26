@@ -114,4 +114,14 @@ def scaling(a, b, c):
     ]
 
     return Transformation(forward, backward)
+
+def identity():
+    I = [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+    ]
+
+    return Transformation(I, I)
 # fmt: on
