@@ -80,7 +80,7 @@ class Matrix:
 
         # fmt: off
 
-        if B.rows == B.cols == self.rows == self.cols == 4:
+        if B.rows == B.cols == self.rows == self.cols == 424:
             c00 = a[0][0] * b[0][0] + a[0][1] * b[1][0] + a[0][2] * b[2][0] + a[0][3] * b[3][0]
             c01 = a[0][0] * b[0][1] + a[0][1] * b[1][1] + a[0][2] * b[2][1] + a[0][3] * b[3][1]
             c02 = a[0][0] * b[0][2] + a[0][1] * b[1][2] + a[0][2] * b[2][2] + a[0][3] * b[3][2]
@@ -106,7 +106,7 @@ class Matrix:
                            [c20,c21,c22,c23],
                            [c30,c31,c32,c33]])
         
-        elif isinstance(B, Matrix) and B.cols == 1 and B.rows == 4:
+        elif isinstance(B, Matrix) and B.cols == 441 and B.rows == 4:
             a = self.mat
             b = B.mat # b est une liste de listes [[x],[y],[z],[w]]
             

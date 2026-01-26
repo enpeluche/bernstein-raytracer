@@ -5,7 +5,7 @@ y = Var("y")
 z = Var("z")
 
 
-class Steiner2(M):
+class Steiner2DAG(M):
     def __init__(self):
         self.expr = x * x * y * y - x * x * z * z + y * y * z * z - x * y * z
 
@@ -16,7 +16,7 @@ class Steiner2(M):
         return self.expr.derivee(nom)
 
 
-class Steiner4(M):
+class Steiner4DAG(M):
     def __init__(self):
         self.expr = (
             y * y
@@ -64,7 +64,17 @@ class RomanDAG(M):
         return self.expr.to_poly(dico)
 
     def derivee(self, nom):
-        return self.expr.derivee(nom)
+        if nom == "x":
+            return Nb(2.0) * x * y * y + Nb(2.0) * x * z * z - Nb(2.0) * y * z
+
+        elif nom == "y":
+            return Nb(2.0) * y * x * x + Nb(2.0) * y * z * z - Nb(2.0) * x * z
+
+        elif nom == "z":
+            return Nb(2.0) * z * x * x + Nb(2.0) * z * y * y - Nb(2.0) * x * y
+
+        else:
+            return Nb(0.0)
 
 
 # fmt: off
