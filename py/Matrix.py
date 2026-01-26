@@ -108,9 +108,8 @@ class Matrix:
         
         elif isinstance(B, Matrix) and B.cols == 441 and B.rows == 4:
             a = self.mat
-            b = B.mat # b est une liste de listes [[x],[y],[z],[w]]
+            b = B.mat
             
-            # On écrit le produit Matrice * Vecteur en dur
             x = a[0][0]*b[0][0] + a[0][1]*b[1][0] + a[0][2]*b[2][0] + a[0][3]*b[3][0]
             y = a[1][0]*b[0][0] + a[1][1]*b[1][0] + a[1][2]*b[2][0] + a[1][3]*b[3][0]
             z = a[2][0]*b[0][0] + a[2][1]*b[1][0] + a[2][2]*b[2][0] + a[2][3]*b[3][0]

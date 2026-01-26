@@ -49,11 +49,9 @@ def rendering(cam, contact, scene):
     (nx, ny, nz, d) = contact.plan
     (lx, ly, lz) = cam.light_dir
 
-    # Produit scalaire
     ps = nx * lx + ny * ly + nz * lz
 
     if ps <= 0:
-        # On définit une lumière ambiante (ex: 10% de luminosité)
         ambient = 0.1
 
         return (
@@ -68,14 +66,12 @@ def rendering(cam, contact, scene):
         contact.pt[2] + nz * epsilon,
     )
 
-    # On lance le rayon vers le soleil
     shadow_ray = Ray(origin_shadow, (lx, ly, lz))
 
     obstacles = scene.intersection(shadow_ray)
 
     is_in_shadow = False
 
-    # --- ÉTAPE 3 : FILTRE DES FANTÔMES ---
     for intervalle in obstacles:
         is_in_shadow = True
 
@@ -83,15 +79,11 @@ def rendering(cam, contact, scene):
 
     ambient = 0.1
 
-    # Calcul de la lumière diffuse théorique (si y'avait pas d'obstacle)
     diffuse = max(0, ps) * 0.9
 
     if is_in_shadow:
-        # On garde l'ambiant, ET on garde une partie du diffus
-        # (comme si la lumière traversait un peu ou rebondissait)
         coef = ambient + diffuse * (1.0 - shadow_opacity)
     else:
-        # Plein soleil
         coef = ambient + diffuse
 
     coef = min(1.0, coef)
@@ -137,29 +129,22 @@ def raycasting_buffer(cam, scene):
     height = cam.h
     buffer = []
 
-    # On centre (dx, dy) pour parcourir l'écran
     hx = width / 2.0
     hz = height / 2.0
 
     for y in range(height):
-        # Inversion Y pour avoir le haut en haut
-        # map y de 0..h vers h/2 .. -h/2
+
         py = hz - y
         for x in range(width):
             px = x - hx
 
-            # 1. Générer rayon
-            # Adapte selon ta méthode generate_ray actuelle
             rayon = cam.generate_ray(px, py)
 
-            # 2. Intersection
             intervalles = scene.intersection(rayon)
 
-            # 3. Couleur
-            col = (0, 0, 0)  # Noir par défaut
+            col = (0, 0, 0)
             if intervalles:
-                # On prend le premier point positif
-                hit = intervalles[0].a  # ou .b selon ta logique CSG
+                hit = intervalles[0].a
                 if hit.t > 0:
 
                     col = rendering(cam, hit)
@@ -174,7 +159,6 @@ def calcul_ligne_optimise(y):
     Maintenant, cette fonction ne prend que 'y'.
     Elle utilise les variables globales initialisées ci-dessus.
     """
-    # On récupère les objets stockés localement dans le processus
     cam = worker_cam
     scene = worker_scene
 
@@ -198,10 +182,8 @@ def calcul_ligne_optimise(y):
                     hit = contact.a
                     break
             if hit:
-                # Si tu as la fonction rendering et apply_fog accessibles
                 obj_color = rendering(cam, hit)
                 final_color = obj_color
-                # final_color = apply_fog(obj_color, bg_color, hit.t)
 
         ligne_pixels.append(final_color)
 
@@ -209,28 +191,23 @@ def calcul_ligne_optimise(y):
 
 
 def raycasting_parallele(cam, scene):
-    print(f"🚀 Démarrage MP Optimisé sur {mp.cpu_count()} cœurs...")
+    print(f"émarrage MP Optimisé sur {mp.cpu_count()} cœurs...")
     start = time.perf_counter()
 
     height = 2 * cam.size_win + 1
 
-    # On ne passe plus que le numéro de ligne ! C'est ultra léger.
     tâches = range(height)
 
-    # L'argument 'initializer' permet d'envoyer la scène une seule fois au début
     with mp.Pool(
         processes=mp.cpu_count(), initializer=init_worker, initargs=(cam, scene)
     ) as pool:
 
-        # CHUNKSIZE : Très important !
-        # Au lieu de donner les lignes 1 par 1, on les donne par paquets (ex: 10 par 10)
-        # Cela réduit encore les échanges processeurs.
         resultats = pool.map(calcul_ligne_optimise, tâches, chunksize=50)
 
     buffer_final = [pixel for ligne in resultats for pixel in ligne]
 
     end = time.perf_counter()
-    print(f"✅ Rendu terminé en {end - start:.4f} secondes")
+    print(f" Rendu terminé en {end - start:.4f} secondes")
 
     img = Image.new("RGB", (2 * cam.size_win + 1, 2 * cam.size_win + 1))
     img.putdata(buffer_final)
@@ -246,13 +223,12 @@ def raycasting_antialiasing(cam, scene, samples=4):
             total_r, total_g, total_b = 0, 0, 0
 
             for s in range(samples):
-                # On ajoute un petit décalage aléatoire (-0.5 à 0.5)
-                # pour ne pas tirer toujours au centre du pixel
+
                 dx = random.uniform(-0.5, 0.5)
                 dz = random.uniform(-0.5, 0.5)
 
                 rayon = cam.generate_ray(x + dx, z + dz)
-                couleur = calculer_couleur_rayon(rayon, scene)  # Ta logique habituelle
+                couleur = calculer_couleur_rayon(rayon, scene)
 
                 total_r += couleur[0]
                 total_g += couleur[1]

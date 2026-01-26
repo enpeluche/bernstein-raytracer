@@ -4,8 +4,6 @@ from util import *
 from Polynome import *
 from Cameras import *
 from Object import *
-import time
-from Transformation import *
 from Matrix import *
 from Renderer import *
 from Transformation import *
@@ -13,13 +11,7 @@ from Transformation import *
 PI = 3.1415926565
 MESURE = PI / 180.0
 
-# Prim(roman(), (122, 255, 33), AABB((-2, -2, -2), (2, 2, 2)))
 
-
-# deuxboules = Union(
-#    Prim(boule(-0.5, 0, 0, 1), (150, 150, 150)),
-#    Prim(boule(0.5, 0, 0, 1), (240, 150, 150)),
-# )
 camera = CameraPerspective(
     cam_o=(0.0, -4.0, 0.0),
     cam_dx=(1.0, 0.0, 0.0),

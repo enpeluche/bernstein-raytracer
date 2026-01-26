@@ -26,7 +26,7 @@ def Casteljaujaujau(v):
 def Casteljau(v):
     n = len(v)
 
-    # --- OPTIMISATION : Degré 2 (Sphères, Cylindres...)
+    # Degré 2 (Sphères, Cylindres...)
     if n == 3:
         p0, p1, p2 = v
         # Étage 1
@@ -37,7 +37,7 @@ def Casteljau(v):
         # Retour immédiat
         return ([p0, m0, s], [s, m1, p2])
 
-    # --- OPTIMISATION : Degré 3 (Bézier Cubique) ---
+    # Degré 3 (Bézier Cubique)
     if n == 4:
         p0, p1, p2, p3 = v
         # Étage 1
@@ -55,49 +55,33 @@ def Casteljau(v):
     if n == 5:
         c0, c1, c2, c3, c4 = v
 
-        # Étape 1
         m0 = (c0 + c1) * 0.5
         m1 = (c1 + c2) * 0.5
         m2 = (c2 + c3) * 0.5
         m3 = (c3 + c4) * 0.5
 
-        # Étape 2
         m01 = (m0 + m1) * 0.5
         m12 = (m1 + m2) * 0.5
         m23 = (m2 + m3) * 0.5
 
-        # Étape 3
         m012 = (m01 + m12) * 0.5
         m123 = (m12 + m23) * 0.5
 
-        # Étape 4 (Point de scission)
         m0123 = (m012 + m123) * 0.5
 
-        # Gauche : de c0 à m0123 / Droite : de m0123 à c4
         return ([c0, m0, m01, m012, m0123], [m0123, m123, m23, m3, c4])
-    # 1. On crée une copie de travail 'temp' (taille N)
-    # On évite de toucher à 'v' direct pour ne pas casser l'objet source
+
     temp = list(v)
 
-    # 2. On initialise les résultats avec les extrêmes actuels
-    pv = [temp[0]]  # Bord GAUCHE (P0)
-    dv = [temp[-1]]  # Bord DROIT (Pn)
+    pv = [temp[0]]
+    dv = [temp[-1]]
 
-    # 3. Boucle principale (Réduction du triangle)
-    # 'i' est l'étape (de 1 à n-1)
     for i in range(1, n):
 
-        # Boucle interne : calcul des moyennes
-        # On va jusqu'à n-i car la liste "utile" rétrécit à chaque étape
         for k in range(n - i):
-            # CALCUL IN-PLACE : On écrase temp[k] avec la nouvelle valeur
-            # C'est ici qu'on gagne du temps (pas de création de liste 'vm')
             temp[k] = (temp[k] + temp[k + 1]) * 0.5
 
-        # À la fin de l'étape, on récupère les nouvelles extrémités
-        pv.append(temp[0])  # Nouvelle pointe gauche
-        dv.append(temp[n - 1 - i])  # Nouvelle pointe droite (le dernier calculé)
+        pv.append(temp[0])
+        dv.append(temp[n - 1 - i])
 
-    # 4. On retourne (Gauche, Droite inversée)
-    # dv est rempli à l'envers (du bas vers le haut du triangle), donc on l'inverse
     return (pv, dv[::-1])

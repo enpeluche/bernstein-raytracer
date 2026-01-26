@@ -107,23 +107,15 @@ class Prim(Obj):
                 t_in = roots[i]
                 t_out = roots[i + 1]
 
-                # --- LE FIX EST ICI : FILTRAGE DES T NÉGATIFS --- 🛡️
-
-                # Cas 1 : L'objet est entièrement derrière le rayon
                 if t_out < 0.0001:
-                    continue  # On passe à l'intervalle suivant
+                    continue
 
-                # Cas 2 : On est DANS l'objet (t_in < 0, t_out > 0)
-                # (Optionnel pour les ombres, mais propre mathématiquement)
                 if t_in < 0.0001:
                     t_in = 0.0001
-
-                # A. On crée les Hits LOCAUX (Points et normales bruts)
 
                 hit_a = self.compute_ray_hit(trf_ray, roots[i])
                 hit_b = self.compute_ray_hit(trf_ray, roots[i + 1])
 
-                # B. Transformation Local -> Monde (Le Retour CRUCIAL) 🚨
                 if self.T is not None:
                     hit_a = self._local_to_world(hit_a, ray)
                     hit_b = self._local_to_world(hit_b, ray)
