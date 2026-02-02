@@ -42,4 +42,4 @@ class RayHit:
             transfomatvplan.get(0, 2),
             transfomatvplan.get(0, 3),
         )
-        return Contact(contact.t, trf_pt, trf_plan, contact.color)
+        return RayHit(contact.t, trf_pt, trf_plan, contact.color)
