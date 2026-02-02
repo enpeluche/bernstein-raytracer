@@ -3,6 +3,65 @@ from util import clamp
 import time
 import random
 from Ray import Ray
+import os
+import shutil
+import glob
+
+# faire une classe Scene et une classe Renderer (fichier temporaire, mais au moins, on aura moins de ram)
+
+
+class Renderer:
+    def __init__(self, scene):
+
+        self.scene = scene
+        self.frame_count = 0
+
+        if os.path.exists("tmp"):
+            shutil.rmtree("tmp")
+        os.makedirs("tmp")
+
+    def render(self):
+        frame = self.scene.raycasting()
+
+        frame.save(f"tmp/{self.frame_count:04d}.png")
+
+        self.frame_count += 1
+
+    def save(self, format="png"):
+        if format == "png":
+            pass
+
+        if format == "gif":
+
+            search_pattern = os.path.join("tmp", "*.png")
+            files = glob.glob(search_pattern)
+
+            files.sort()
+
+            if not files:
+                print("⚠️ Aucune image trouvée dans le dossier temporaire !")
+                return
+
+            print(f"🎞️ Assemblage de {len(files)} images...")
+
+            frames = [Image.open(f) for f in files]
+
+            frames[0].save(
+                "mon_film.gif",
+                save_all=True,
+                append_images=frames[1:],  # On accroche les wagons
+                optimize=True,
+                duration=100,
+                loop=0,
+            )
+
+        print("✅ GIF terminé : mon_film.gif")
+
+        # 5. (Optionnel) Nettoyage
+        # Tu peux supprimer le dossier temporaire ici si tu veux faire le ménage
+        # import shutil
+        # shutil.rmtree(self.temp_dir)
+
 
 _worker_cam = None
 _worker_scene = None
@@ -42,85 +101,6 @@ def _process_line(y):
                 color = rendering(cam, hit)
         ligne_pixels.append(color)
     return ligne_pixels
-
-
-def rendering(cam, contact, scene):
-    (rr, vv, bb) = contact.color
-    (nx, ny, nz, d) = contact.plan
-    (lx, ly, lz) = cam.light_dir
-
-    ps = nx * lx + ny * ly + nz * lz
-
-    if ps <= 0:
-        ambient = 0.1
-
-        return (
-            int(ambient * rr),
-            int(ambient * vv),
-            int(ambient * bb),
-        )
-    epsilon = 1e-3
-    origin_shadow = (
-        contact.pt[0] + nx * epsilon,
-        contact.pt[1] + ny * epsilon,
-        contact.pt[2] + nz * epsilon,
-    )
-
-    shadow_ray = Ray(origin_shadow, (lx, ly, lz))
-
-    obstacles = scene.intersection(shadow_ray)
-
-    is_in_shadow = False
-
-    for intervalle in obstacles:
-        is_in_shadow = True
-
-    shadow_opacity = 0.96
-
-    ambient = 0.1
-
-    diffuse = max(0, ps) * 0.9
-
-    if is_in_shadow:
-        coef = ambient + diffuse * (1.0 - shadow_opacity)
-    else:
-        coef = ambient + diffuse
-
-    coef = min(1.0, coef)
-    return (int(coef * rr), int(coef * vv), int(coef * bb))
-
-
-class Renderer:
-    def __init__(self):
-        pass
-
-
-def raycasting(cam, scene):
-    start = time.perf_counter()
-
-    print("Début de génération de l'image.")
-
-    pixels_buffer = []
-
-    for zpix in range(cam.size_win, -cam.size_win - 1, -1):
-        for xpix in range(-cam.size_win, cam.size_win + 1):
-            rayon = cam.generate_ray(xpix, zpix)
-            intervalles = scene.intersection(rayon)
-
-            if [] == intervalles or intervalles == None:
-                (r, v, b) = cam.background_color
-            # elif intervalles[0].a.t > 10: # fog ?
-            #    (r, v, b) = cam.background_color
-            else:
-                (r, v, b) = rendering(cam, intervalles[0].a, scene)
-
-            pixels_buffer.append((r, v, b))
-
-    img = Image.new("RGB", (2 * cam.size_win + 1, 2 * cam.size_win + 1))
-    img.putdata(pixels_buffer)
-    img.save("render.png")
-    end = time.perf_counter()
-    print(f"Temps d'exécution : {end - start:.6f} secondes")
 
 
 def raycasting_buffer(cam, scene):
