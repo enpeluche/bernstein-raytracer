@@ -30,7 +30,6 @@ class Camera:
         self.size_world = size_world
         self.size_win = size_win
         self.light_dir = normalize3(light_dir)
-        self.background_color = (44, 55, 88)
         self.name = name
 
     def generate_ray(self, px, pz):
