@@ -71,3 +71,50 @@ class AABB:
             return False
 
         return tmax >= tmin and tmax >= 0
+
+    def contains(self, other):
+
+        return (
+            self.bounds_start[0] <= other.bounds_start[0]
+            and self.bounds_start[1] <= other.bounds_start[1]
+            and self.bounds_start[2] <= other.bounds_start[2]
+            and other.bounds_end[0] <= self.bounds_end[0]
+            and other.bounds_end[1] <= self.bounds_end[1]
+            and other.bounds_end[2] <= self.bounds_end[2]
+        )
+
+    def __sub__(self, other):
+        if other.contains(self):
+            return None
+        return self
+
+    def __add__(self, other):
+        new_p1 = (
+            min(self.bounds_start[0], other.bounds_start[0]),
+            min(self.bounds_start[1], other.bounds_start[1]),
+            min(self.bounds_start[2], other.bounds_start[2]),
+        )
+        new_p2 = (
+            max(self.bounds_end[0], other.bounds_end[0]),
+            max(self.bounds_end[1], other.bounds_end[1]),
+            max(self.bounds_end[2], other.bounds_end[2]),
+        )
+
+        return AABB(new_p1, new_p2)
+
+    def __and__(self, other):
+        new_p1 = (
+            max(self.bounds_start[0], other.bounds_start[0]),
+            max(self.bounds_start[1], other.bounds_start[1]),
+            max(self.bounds_start[2], other.bounds_start[2]),
+        )
+        new_p2 = (
+            min(self.bounds_end[0], other.bounds_end[0]),
+            min(self.bounds_end[1], other.bounds_end[1]),
+            min(self.bounds_end[2], other.bounds_end[2]),
+        )
+
+        if new_p1[0] > new_p2[0] or new_p1[1] > new_p2[1] or new_p1[2] > new_p2[2]:
+            return None
+
+        return AABB(new_p1, new_p2)
