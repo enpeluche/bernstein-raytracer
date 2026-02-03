@@ -9,6 +9,11 @@ from Intervalle import Intervalle
 from RayHit import RayHit
 
 from Transformation import *
+from random import randint
+
+
+def random_color():
+    return (randint(0, 255), randint(0, 255), randint(0, 255))
 
 
 class Obj:
@@ -19,6 +24,10 @@ class Obj:
 class Prim(Obj):
     def __init__(self, fonc_xyz, color, T=None, bbox=None):
         self.fonc = fonc_xyz
+
+        if color is None:
+            color = random_color()
+
         self.color = color
 
         if T is None:
@@ -102,6 +111,9 @@ class Prim(Obj):
         intervalles = []
 
         if roots:
+            if len(roots) == 1:
+                roots = [roots[0], roots[0]]
+
             for i in range(0, len(roots) - 1, 2):
 
                 t_in = roots[i]
@@ -219,8 +231,15 @@ class Union(Prim):
     def __init__(self, a, b):
         self.a = a
         self.b = b
+        self.T = identity()
+        self.bbox = a.bbox + b.bbox
 
     def intersection(self, ray):
+
+        if not self.bbox.intersection(
+            ray
+        ):  # ça ne gère pas les transformations pour le moment
+            return []
 
         return union(self.a.intersection(ray), self.b.intersection(ray))
 
@@ -229,8 +248,15 @@ class Inter(Prim):
     def __init__(self, a, b):
         self.a = a
         self.b = b
+        self.T = identity()
+        self.bbox = a.bbox & b.bbox
 
     def intersection(self, ray):
+        if not self.bbox.intersection(
+            ray
+        ):  # ça ne gère pas les transformations pour le moment
+            return []
+
         return inter(self.a.intersection(ray), self.b.intersection(ray))
 
     def transform(self, T):
@@ -276,6 +302,7 @@ class Differ(Prim):
 
         self.a = a
         self.b = b
+        self.bbox = a.bbox - b.bbox
 
     def transform(self, T):
         self.a.T = T * self.a.T
@@ -314,4 +341,10 @@ class Differ(Prim):
         return self
 
     def intersection(self, ray):
+
+        if not self.bbox.intersection(
+            ray
+        ):  # ça ne gère pas les transformations pour le moment
+            return []
+
         return differ(self.a.intersection(ray), self.b.intersection(ray))
