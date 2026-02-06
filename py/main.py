@@ -1,34 +1,38 @@
-from ObjectDAG import *
+from constants import *
 from Shapes import *
-from util import *
-from Polynome import *
 from Cameras import *
 from Object import *
-from Matrix import *
+from Scene import *
 from Renderer import *
-from Transformation import *
-
-PI = 3.1415926565
-MESURE = PI / 180.0
 
 
 camera = CameraPerspective(
-    cam_o=(0.0, -4.0, 0.0),
+    cam_o=(0.0, -3, 0.0),
     cam_dx=(1.0, 0.0, 0.0),
     cam_dy=(0.0, 1.0, 0.0),  # la direction des rayons aussi
     cam_dz=(0.0, 0.0, 1.0),
     size_world=1,
     size_win=500,
-    light_dir=(-1, -1, 1),
+    light_dir=(0, -1, 1),
     name="",
-    focale=2,
+    focale=1.0,
 )
 
+P = Plane(color=(58, 157, 35))
+H1 = HyperboloidOneSheet()
+H2 = HyperboloidTwoSheets()
+R = Roman()
+S = Sphere(1)
+T = Tore(0.2, 1)
+C = Caylay()
+S2 = Steiner2()
+S4 = Steiner4()
 
-def scene():
-    H1 = HyperboloidTwoSheets()
-    H2 = HyperboloidOneSheet(color=(200, 130, 33))
-    return H2
+P.translate(0, 0, -1)
 
+scene = Scene(camera, C & S)
+renderer = Renderer(scene)
 
-raycasting(camera, scene())
+renderer.render()
+
+renderer.save(format="gif")
