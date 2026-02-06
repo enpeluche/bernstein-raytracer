@@ -1,7 +1,7 @@
-from Polynome import *
+from Polynomial import *
 
 
-class M(object):
+class DAG:
     __slots__ = ()
 
     def __init__(self):
@@ -59,7 +59,7 @@ class M(object):
         return self + (-b)
 
 
-class Opp(M):
+class Opp(DAG):
     __slots__ = "a"
 
     def __init__(self, a):
@@ -74,18 +74,18 @@ class Opp(M):
     def topolent(self):
         return -self.a.topolent()
 
-    def derivee(self, nom):
-        return -self.a.derivee(nom)
+    def partial(self, var):
+        return -self.a.partial(var)
 
     def to_poly(self, dico):
         p = self.a.to_poly(dico)
-        return Polynome([-c for c in p.c])
+        return Polynomial([-c for c in p.coefficients])
 
     def __str__(self):
         return f"(-{self.a})"
 
 
-class Plus(M):
+class Plus(DAG):
     __slots__ = ("a", "b")
 
     def __init__(self, a, b):
@@ -98,8 +98,8 @@ class Plus(M):
     def evalsymb(self, dico):
         return self.a.evalsymb(dico) + self.b.evalsymb(dico)
 
-    def derivee(self, nom):
-        return self.a.derivee(nom) + self.b.derivee(nom)
+    def partial(self, var):
+        return self.a.partial(var) + self.b.partial(var)
 
     def topolent(self):
         return self.a.topolent() + self.b.topolent()
@@ -111,7 +111,7 @@ class Plus(M):
         return self.a.to_poly(dico) + self.b.to_poly(dico)
 
 
-class Mult(M):
+class Mult(DAG):
     __slots__ = ("a", "b")
 
     def __init__(self, a, b):
@@ -124,8 +124,8 @@ class Mult(M):
     def evalsymb(self, dico):
         return self.a.evalsymb(dico) * self.b.evalsymb(dico)
 
-    def derivee(self, nom):
-        return self.a.derivee(nom) * self.b + self.a * self.b.derivee(nom)
+    def partial(self, var):
+        return self.a.partial(var) * self.b + self.a * self.b.partial(var)
 
     def topolent(self):
         return self.a.topolent() * self.b.topolent()
@@ -138,7 +138,7 @@ class Mult(M):
         return f"({self.a} * {self.b})"
 
 
-class Nb(M):
+class Nb(DAG):
     __slots__ = "nb"
 
     def __init__(self, n):
@@ -150,53 +150,53 @@ class Nb(M):
     def evalsymb(self, dico):
         return self
 
-    def derivee(self, nom):
+    def partial(self, var):
         return Nb(0.0)
 
     def topolent(self):
-        return Polynome([self.nb])
+        return Polynomial([self.nb])
 
     def to_poly(self, dico):
         # Un nombre devient un polynôme constant [n]
-        return Polynome([self.nb])
+        return Polynomial([self.nb])
 
     def __str__(self):
         return f"{self.nb}"
 
 
-class Var(M):
-    __slots__ = "nom"
+class Var(DAG):
+    __slots__ = "var"
 
-    def __init__(self, nom):
-        self.nom = nom
+    def __init__(self, var):
+        self.var = var
 
     def eval(self, dico):
-        if self.nom in dico:
-            return dico.get(self.nom)
+        if self.var in dico:
+            return dico.get(self.var)
 
         else:
-            return Var(self.nom)
+            return Var(self.var)
 
-    def derivee(self, nom):
-        if self.nom == nom:
+    def partial(self, var):
+        if self.var == var:
             return Nb(1.0)
 
         else:
             return Nb(0.0)
 
     def evalsymb(self, dico):
-        if self.nom in dico:
-            return dico.get(self.nom)
+        if self.var in dico:
+            return dico.get(self.var)
 
         else:
             return self
 
     def topolent(self):
-        if self.nom == "t":
-            return Polynome([0.0, 1.0])
+        if self.var == "t":
+            return Polynomial([0.0, 1.0])
 
     def to_poly(self, dico):
-        return dico.get(self.nom)
+        return dico.get(self.var)
 
     def __str__(self):
-        return f"{self.nom}"
+        return f"{self.var}"

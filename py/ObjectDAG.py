@@ -5,7 +5,36 @@ y = Var("y")
 z = Var("z")
 
 
-class Steiner2DAG(M):
+# Degré 1
+class PlaneDAG(DAG):
+    def __init__(self):
+        self.expr = z
+
+    def to_poly(self, dico):
+        return self.expr.to_poly(dico)
+
+    def partial(self, var):
+        if var == "z":
+            return Nb(1.0)
+        else:
+            return Nb(0.0)
+
+
+# degré 2
+class CylindreDAG(DAG):
+    def __init__(self, r):
+        self.r = r
+        self.expr = x * x + y * y - Nb(self.r) * Nb(self.r)
+        super().__init__()
+
+    def to_poly(self, dico):
+        return self.expr.to_poly(dico)
+
+    def partial(self, var):
+        return self.expr.partial(var)
+
+
+class Steiner2DAG(DAG):
     def __init__(self):
         self.expr = x * x * y * y - x * x * z * z + y * y * z * z - x * y * z
 
@@ -16,7 +45,7 @@ class Steiner2DAG(M):
         return self.expr.derivee(nom)
 
 
-class Steiner4DAG(M):
+class Steiner4DAG(DAG):
     def __init__(self):
         self.expr = (
             y * y
@@ -34,7 +63,7 @@ class Steiner4DAG(M):
         return self.expr.derivee(nom)
 
 
-class HyperboloidTwoSheetsDAG(M):
+class HyperboloidTwoSheetsDAG(DAG):
     def __init__(self):
         self.expr = Nb(0.0) - (z * z - (x * x + y * y + Nb(0.1)))
 
@@ -45,7 +74,7 @@ class HyperboloidTwoSheetsDAG(M):
         return self.expr.derivee(nom)
 
 
-class HyperboloidOneSheetDAG(M):
+class HyperboloidOneSheetDAG(DAG):
     def __init__(self):
         self.expr = Nb(0.0) - (z * z - (x * x + y * y - Nb(0.1)))
 
@@ -56,7 +85,7 @@ class HyperboloidOneSheetDAG(M):
         return self.expr.derivee(nom)
 
 
-class RomanDAG(M):
+class RomanDAG(DAG):
     def __init__(self):
         self.expr = x * x * y * y + x * x * z * z + y * y * z * z - Nb(2.0) * x * y * z
 
@@ -85,7 +114,7 @@ class RomanDAG(M):
 #
 #fmt : on
 
-class SphereDAG(M):
+class SphereDAG(DAG):
     __slots__ = ("r2")
 
     def __init__(self, r):
@@ -131,7 +160,7 @@ class SphereDAG(M):
             return Nb(0.0)
 
 
-class ToreDAG(M):
+class ToreDAG(DAG):
     __slots__ = ("r2", "R2")
 
     def __init__(self, r, R):
