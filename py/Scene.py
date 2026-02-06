@@ -1,10 +1,13 @@
 from PIL import Image
 from Ray import Ray
 from constants import *
+from math import sqrt
+
+from Intervalle import *
 
 
 class Scene:
-    def __init__(self, camera, scene, background_color=(44, 55, 88)):
+    def __init__(self, camera, scene, background_color=(24, 140, 180)):
 
         self.camera = camera
 
@@ -15,196 +18,174 @@ class Scene:
         # il lui faut le contenu de la scene
 
     def raycasting(self):
+        z_img = 0
 
-        #
+        width = height = self.camera.size_win
 
-        pixels_buffer = []
+        img = Image.new("RGB", (width, height))
 
-        for zpix in range(self.camera.size_win, -self.camera.size_win - 1, -1):
-            for xpix in range(-self.camera.size_win, self.camera.size_win + 1):
+        for zpix in range(height // 2, -height // 2, -1):
 
-                rayon = self.camera.generate_ray(xpix, zpix)
-                intervalles = self.scene.intersection(rayon)
+            row_pixels = []
 
-                if [] == intervalles or intervalles == None:
-                    (r, v, b) = self.background_color
-                elif intervalles[0].a.t < FOG_START:
-                    (r, v, b) = self.rendering(rayon, intervalles[0].a)
-                elif intervalles[0].a.t > FOG_END:  # fog ?
-                    (r, v, b) = self.background_color
-                else:
-                    dist = intervalles[0].a.t
-                    fog_factor = (dist - FOG_START) / (FOG_END - FOG_START)
-                    (r, v, b) = self.rendering(rayon, intervalles[0].a)
-                    # Formule de mélange (Lerp) : (1-f)*Objet + f*Fond
-                    bg_r, bg_v, bg_b = self.background_color
+            print(f"zpix: {zpix:05d}", end="\r")
 
-                    r = int(r * (1 - fog_factor) + bg_r * fog_factor)
-                    v = int(v * (1 - fog_factor) + bg_v * fog_factor)
-                    b = int(b * (1 - fog_factor) + bg_b * fog_factor)
+            for xpix in range(-width // 2, width // 2):
 
-                pixels_buffer.append((r, v, b))
+                ray = self.camera.generate_ray(xpix, zpix)
+                intervalles = self.scene.intersection(ray)
 
-        img = Image.new(
-            "RGB", (2 * self.camera.size_win + 1, 2 * self.camera.size_win + 1)
-        )
-        img.putdata(pixels_buffer)
+                if not intervalles:
+                    row_pixels.append(self.background_color)
+                    continue
+
+                color = self.rendering(ray, intervalles[0].a)
+
+                row_pixels.append(color)
+
+            box = (0, z_img, width, z_img + 1)
+
+            line_img = Image.new("RGB", (width, 1))
+            line_img.putdata(row_pixels)
+            img.paste(line_img, box)
+
+            z_img += 1
 
         return img
 
     def rendering(self, ray, rayHit):
 
-        (rr, vv, bb) = rayHit.color
+        (red, green, blue) = rayHit.color
+
+        (red, green, blue) = self._apply_face_color(ray, rayHit)
+
+        (red, green, blue) = self._apply_lighting(
+            rayHit.pt, rayHit.plan, (red, green, blue)
+        )
+
+        (red, green, blue) = self._apply_grid_pattern(rayHit, (red, green, blue))
+
+        (red, green, blue) = self._apply_fog(rayHit.t, (red, green, blue))
+
+        return (red, green, blue)
+
+    def _apply_fog(self, t, color):
+        if t < FOG_START:
+            return color
+
+        if t > FOG_END:
+            return self.background_color
+
+        bg_r, bg_g, bg_b = self.background_color
+        red, green, blue = color
+
+        fog = (t - FOG_START) / (FOG_END - FOG_START)
+
+        inv_fog = 1 - fog
+
+        red = int(red * inv_fog + bg_r * fog)
+        green = int(green * inv_fog + bg_g * fog)
+        blue = int(blue * inv_fog + bg_b * fog)
+
+        return (red, green, blue)
+
+    def _apply_face_color(self, ray, rayHit):
+        # je suis certain que cela fait ce que ça fait ?
         (nx, ny, nz, d) = rayHit.plan
+
+        dot_product = (
+            ray.direction[0] * nx + ray.direction[1] * ny + ray.direction[2] * nz
+        )
+
+        if dot_product < 0:
+            return rayHit.color
+
+        (r, g, b) = rayHit.color
+
+        return (255 - r, 255 - g, 255 - b)
+
+    def _apply_lighting(self, pt, plan, color):
+        (rr, vv, bb) = color
+        (nx, ny, nz, d) = plan
         (lx, ly, lz) = self.camera.light_dir
 
-        oui = ray.direction[0] * nx + ray.direction[1] * ny + ray.direction[2] * nz
-
-        if oui < 0:
-            (rr, vv, bb) = (rr, vv, bb)
-        else:
-            (rr, vv, bb) = (255 - rr, 255 - vv, 255 - bb)
-
+        # sert à calculer l'angle entre lalumière et la normale
         ps = nx * lx + ny * ly + nz * lz
 
-        # --- FIX 1 : Éclairage Double Face ---
-        # On prend la valeur absolue. Que la normale soit à l'endroit ou à l'envers,
-        # si la surface est face à la lumière, elle doit briller.
+        # utile ? à voir
         diffuse_intensity = abs(ps)
+        diffuse = diffuse_intensity * 0.9
 
-        # --- FIX 2 : Point de départ de l'ombre (Shadow Bias) ---
-        epsilon = 0.001
-
-        # Si la normale pointe à l'opposé de la lumière (ps < 0),
-        # il faut pousser le point dans l'AUTRE sens pour sortir de la surface.
-        # Sinon, le rayon part DANS l'objet et croit qu'il est à l'ombre.
         bias_direction = 1.0 if ps > 0 else -1.0
 
         origin_shadow = (
-            rayHit.pt[0] + nx * epsilon * bias_direction,
-            rayHit.pt[1] + ny * epsilon * bias_direction,
-            rayHit.pt[2] + nz * epsilon * bias_direction,
+            pt[0] + nx * shadow_bias * bias_direction,
+            pt[1] + ny * shadow_bias * bias_direction,
+            pt[2] + nz * shadow_bias * bias_direction,
         )
 
-        (nx, ny, nz, d) = rayHit.plan
+        shadow_ray = Ray(origin_shadow, (lx, ly, lz))
 
-        # 2. Recalcul de la direction du rayon (Vue)
-        # Vecteur = Point Impact - Position Caméra
+        obstacles = self.scene.intersection(shadow_ray)
+
+        if obstacles:
+            coef = ambient + diffuse * (1.0 - shadow_opacity)
+        else:
+            coef = ambient + diffuse
+
+        coef = min(1.0, coef)
+
+        return (int(coef * rr), int(coef * vv), int(coef * bb))
+
+    def _apply_grid_pattern(self, rayHit, color):
         vx = rayHit.pt[0] - self.camera.cam_o[0]
         vy = rayHit.pt[1] - self.camera.cam_o[1]
         vz = rayHit.pt[2] - self.camera.cam_o[2]
 
-        import math
+        dist = sqrt(vx * vx + vy * vy + vz * vz)
 
-        dist_vue = math.sqrt(
-            vx * vx + vy * vy + vz * vz
-        )  # C'est théoriquement rayHit.t
-        vx, vy, vz = vx / dist_vue, vy / dist_vue, vz / dist_vue
+        if dist < 0.0001:
+            return color
 
-        spacing = 0.2  # Une ligne tous les 0.2 unités
+        vx, vy, vz = vx / dist, vy / dist, vz / dist
 
-        K = 0.002
+        spacing = 0.25
 
-        # Sécurité : alignement
-        (nx, ny, nz, d) = rayHit.plan
-        vx, vy, vz = (
-            rayHit.pt[0] - self.camera.cam_o[0],
-            rayHit.pt[1] - self.camera.cam_o[1],
-            rayHit.pt[2] - self.camera.cam_o[2],
-        )
+        K = 0.0015
 
-        dist = math.sqrt(vx * vx + vy * vy + vz * vz)
+        base_thickness = 0.003
 
-        thickness = min(dist * K, spacing)
+        max_allowed_thickness = spacing * 0.4
 
-        # On décale un peu (+ spacing/2) pour éviter que la ligne tombe pile sur le défaut central (0,0,0)
+        raw_thickness = base_thickness + (dist * K)
+        thickness = min(raw_thickness, max_allowed_thickness)
+
         px = abs(rayHit.pt[0] + spacing / 2.0)
         py = abs(rayHit.pt[1] + spacing / 2.0)
         pz = abs(rayHit.pt[2] + spacing / 2.0)
 
-        # Le reste de la division (ex: 0.05 ou 0.24)
         mx = px % spacing
         my = py % spacing
         mz = pz % spacing
 
-        # Transformation en "Distance au bord le plus proche" (Onde triangulaire)
-        # Ça permet d'avoir la ligne centrée sur le multiple
         dx = min(mx, spacing - mx)
         dy = min(my, spacing - my)
         dz = min(mz, spacing - mz)
 
-        # 4. Dessin
         if dx < thickness or dy < thickness or dz < thickness:
-            return (255, 255, 255)
 
-        shadow_ray = Ray(origin_shadow, (lx, ly, lz))
+            fade_factor = 1.0
+            if dist > 5.0:
 
-        # Petite optimisation : on s'arrête au premier obstacle trouvé
-        obstacles = self.scene.intersection(shadow_ray)
-        is_in_shadow = False
+                fade_factor = max(0.3, 1.0 - (dist - 10.0) * 0.05)
 
-        # Vérification rapide (si la liste n'est pas vide/None)
-        if obstacles:
-            is_in_shadow = True
+            grid_r, grid_g, grid_b = 255 - color[0], 255 - color[1], 255 - color[2]
+            obj_r, obj_g, obj_b = color
 
-        shadow_opacity = 0.86  # L'ombre n'est pas totalement noire
-        ambient = 0.1
+            final_r = int(obj_r * (1 - fade_factor) + grid_r * fade_factor)
+            final_g = int(obj_g * (1 - fade_factor) + grid_g * fade_factor)
+            final_b = int(obj_b * (1 - fade_factor) + grid_b * fade_factor)
 
-        # Application de l'intensité calculée plus haut
-        diffuse = diffuse_intensity * 0.9
-
-        if is_in_shadow:
-            coef = ambient + diffuse * (1.0 - shadow_opacity)
+            return (final_r, final_g, final_b)
         else:
-            coef = ambient + diffuse
-
-        coef = min(1.0, coef)
-
-        return (int(coef * rr), int(coef * vv), int(coef * bb))
-
-    def renderindg(self, rayHit):
-        (rr, vv, bb) = rayHit.color
-        (nx, ny, nz, d) = rayHit.plan
-        (lx, ly, lz) = self.camera.light_dir
-
-        ps = nx * lx + ny * ly + nz * lz
-
-        if ps <= 0:
-            ambient = 0.1
-
-            return (
-                int(ambient * rr),
-                int(ambient * vv),
-                int(ambient * bb),
-            )
-
-        epsilon = 0.001
-
-        origin_shadow = (
-            rayHit.pt[0] + nx * epsilon,
-            rayHit.pt[1] + ny * epsilon,
-            rayHit.pt[2] + nz * epsilon,
-        )
-
-        shadow_ray = Ray(origin_shadow, (lx, ly, lz))
-
-        obstacles = self.scene.intersection(shadow_ray)
-
-        is_in_shadow = False
-
-        for intervalle in obstacles:
-            is_in_shadow = True
-
-        shadow_opacity = 0.86
-
-        ambient = 0.1
-
-        diffuse = max(0, ps * 0.9)
-
-        if is_in_shadow:
-            coef = ambient + diffuse * (1.0 - shadow_opacity)
-        else:
-            coef = ambient + diffuse
-
-        coef = min(1.0, coef)
-        return (int(coef * rr), int(coef * vv), int(coef * bb))
+            return color
