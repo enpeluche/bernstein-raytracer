@@ -1,5 +1,6 @@
 from DAG import *
 from solveracine import *
+from Polynomial import *
 from util import *
 from bool1d import *
 from Matrix import *
@@ -92,7 +93,6 @@ class Prim(Obj):
         return RayHit(t, pt, plan, self.color)
 
     def intersection(self, ray):
-
         trf_ray = ray
         if self.T != None:
             trf_ray = ray.transform(~self.T)
@@ -100,16 +100,29 @@ class Prim(Obj):
         if not self.bbox.intersection(trf_ray):
             return []
 
-        poly_x = Polynome([trf_ray.origin[0], trf_ray.direction[0]])
-        poly_y = Polynome([trf_ray.origin[1], trf_ray.direction[1]])
-        poly_z = Polynome([trf_ray.origin[2], trf_ray.direction[2]])
-
+        poly_x = Polynomial([trf_ray.origin[0], trf_ray.direction[0]])
+        poly_y = Polynomial([trf_ray.origin[1], trf_ray.direction[1]])
+        poly_z = Polynomial([trf_ray.origin[2], trf_ray.direction[2]])
         pol_t = self.fonc.to_poly({"x": poly_x, "y": poly_y, "z": poly_z})
 
-        roots = racine(pol_t.vect())
+        # là à la fin il faudrait arrondir les coeffs du polynomes
 
+        roots = pol_t.roots()
+
+        if not roots:
+            return []
+
+        unique_roots = []
+        if roots:
+            unique_roots.append(roots[0])
+            for t in roots[1:]:
+                # Si la racine est distincte de la précédente (à epsilon près)
+                if t - unique_roots[-1] > 1e-4:
+                    unique_roots.append(t)
+        # --- 3. Création des Intervalles "Fins" ---
         intervalles = []
 
+        # ON NE FAIT PLUS DE PAIRES. Chaque racine devient un intervalle.
         if roots:
             if len(roots) == 1:
                 roots = [roots[0], roots[0]]
@@ -210,9 +223,9 @@ class Prim(Obj):
         return hit
 
     def normale(self, x, y, z):
-        fx = self.fonc.derivee("x")
-        fy = self.fonc.derivee("y")
-        fz = self.fonc.derivee("z")
+        fx = self.fonc.partial("x")
+        fy = self.fonc.partial("y")
+        fz = self.fonc.partial("z")
         dico = {"x": x, "y": y, "z": z}
         (a, b, c) = (fx.eval(dico), fy.eval(dico), fz.eval(dico))
         return normalize3((a, b, c))
@@ -241,7 +254,7 @@ class Union(Prim):
         ):  # ça ne gère pas les transformations pour le moment
             return []
 
-        return union(self.a.intersection(ray), self.b.intersection(ray))
+        return union1D_iterative(self.a.intersection(ray), self.b.intersection(ray))
 
 
 class Inter(Prim):
@@ -257,7 +270,7 @@ class Inter(Prim):
         ):  # ça ne gère pas les transformations pour le moment
             return []
 
-        return inter(self.a.intersection(ray), self.b.intersection(ray))
+        return inter_iterative(self.a.intersection(ray), self.b.intersection(ray))
 
     def transform(self, T):
         self.a.T = T * self.a.T
@@ -342,9 +355,9 @@ class Differ(Prim):
 
     def intersection(self, ray):
 
-        if not self.bbox.intersection(
-            ray
-        ):  # ça ne gère pas les transformations pour le moment
-            return []
+        # if not self.bbox.intersection(
+        #    ray
+        # ):  # ça ne gère pas les transformations pour le moment
+        #    return []
 
         return differ(self.a.intersection(ray), self.b.intersection(ray))
