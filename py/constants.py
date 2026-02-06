@@ -4,6 +4,10 @@ DEG = PI / 180.0
 FOG_START = 5.0
 FOG_END = 20.0
 
+shadow_bias = 0.001
+shadow_opacity = 0.5
+ambient = 0.1
+
 white = (255, 255, 255)
 black = (0, 0, 0)
 red = (255, 0, 0)
