@@ -1,24 +1,25 @@
-def vecteurdesmilieux(v):
-    l = len(v)
-    vm = []
+def midpoints(points):
+    """
+    Calcul les milieux entre chaque paire de points consécutifs et renvoie un tuple.
 
-    for k in range(l - 1):
-        vm.append((v[k] + v[k + 1]) * 0.5)
-    return vm
+    Args:
+        v (tuple): Description
+    """
+
+    return [(points[i] + points[i + 1]) * 0.5 for i in range(len(points) - 1)]
 
 
-def Casteljaujaujau(v):
-    l = len(v)
+def old_Casteljau(points):
     pv, dv, sv = [], [], []
 
-    sv.append(v)
+    sv.append(points)
 
-    for k in range(1, l):
-        sv.append(vecteurdesmilieux(sv[k - 1]))
+    for k in range(1, len(points)):
+        sv.append(midpoints(sv[k - 1]))
 
-    for k in range(l):
+    for k in range(len(points)):
         pv.append(sv[k][0])
-        dv.append(sv[l - 1 - k][-1])
+        dv.append(sv[len(points) - 1 - k][-1])
 
     return (pv, dv)
 
