@@ -41,8 +41,8 @@ class Steiner2DAG(DAG):
     def to_poly(self, dico):
         return self.expr.to_poly(dico)
 
-    def derivee(self, nom):
-        return self.expr.derivee(nom)
+    def partial(self, var):
+        return self.expr.partial(var)
 
 
 class Steiner4DAG(DAG):
@@ -59,8 +59,8 @@ class Steiner4DAG(DAG):
     def to_poly(self, dico):
         return self.expr.to_poly(dico)
 
-    def derivee(self, nom):
-        return self.expr.derivee(nom)
+    def partial(self, var):
+        return self.expr.partial(var)
 
 
 class HyperboloidTwoSheetsDAG(DAG):
@@ -70,8 +70,8 @@ class HyperboloidTwoSheetsDAG(DAG):
     def to_poly(self, dico):
         return self.expr.to_poly(dico)
 
-    def derivee(self, nom):
-        return self.expr.derivee(nom)
+    def partial(self, var):
+        return self.expr.partial(var)
 
 
 class HyperboloidOneSheetDAG(DAG):
@@ -81,8 +81,8 @@ class HyperboloidOneSheetDAG(DAG):
     def to_poly(self, dico):
         return self.expr.to_poly(dico)
 
-    def derivee(self, nom):
-        return self.expr.derivee(nom)
+    def partial(self, var):
+        return self.expr.partial(var)
 
 
 class RomanDAG(DAG):
@@ -92,14 +92,14 @@ class RomanDAG(DAG):
     def to_poly(self, dico):
         return self.expr.to_poly(dico)
 
-    def derivee(self, nom):
-        if nom == "x":
+    def partial(self, var):
+        if var == "x":
             return Nb(2.0) * x * y * y + Nb(2.0) * x * z * z - Nb(2.0) * y * z
 
-        elif nom == "y":
+        elif var == "y":
             return Nb(2.0) * y * x * x + Nb(2.0) * y * z * z - Nb(2.0) * x * z
 
-        elif nom == "z":
+        elif var == "z":
             return Nb(2.0) * z * x * x + Nb(2.0) * z * y * y - Nb(2.0) * x * y
 
         else:
@@ -127,9 +127,9 @@ class SphereDAG(DAG):
         :param self: Description
         :param dico: Description
         """
-        px = dico["x"].c
-        py = dico["y"].c
-        pz = dico["z"].c
+        px = dico["x"].coefficients
+        py = dico["y"].coefficients
+        pz = dico["z"].coefficients
 
         sx = px[0]
         dx = px[1] if len(px) > 1 else 0.0
@@ -144,17 +144,17 @@ class SphereDAG(DAG):
         b = 2.0 * (sx * dx + sy * dy + sz * dz)
         c = (sx * sx + sy * sy + sz * sz) - self.r2
 
-        return Polynome([c, b, a])
+        return Polynomial([c, b, a])
 
-    def derivee(self, nom):
-        if nom == "x":
-            return Mult(Nb(2.0), Var("x"))
+    def partial(self, var):
+        if var == 'x':
+            return Nb(2.0) * Var("x")
 
-        elif nom == "y":
-            return Mult(Nb(2.0), Var("y"))
+        elif var == 'y':
+            return Nb(2.0) * Var("y")
 
-        elif nom == "z":
-            return Mult(Nb(2.0), Var("z"))
+        elif var == 'z':
+            return Nb(2.0) * Var("z")
 
         else:
             return Nb(0.0)
@@ -176,9 +176,9 @@ class ToreDAG(DAG):
         :param dico: Description
         """
 
-        px = dico["x"].c
-        py = dico["y"].c
-        pz = dico["z"].c
+        px = dico["x"].coefficients
+        py = dico["y"].coefficients
+        pz = dico["z"].coefficients
 
         sx = px[0]
         dx = px[1] if len(px) > 1 else 0.0
@@ -227,9 +227,9 @@ class ToreDAG(DAG):
 
         E = K * K - FourR2 * cxz
 
-        return Polynome([E, D, C, B, A])
+        return Polynomial([E, D, C, B, A])
 
-    def derivee(self, nom):
+    def partial(self, var):
 
         R2 = self.R2
         r2 = self.r2
@@ -237,23 +237,76 @@ class ToreDAG(DAG):
         const_xz = -(R2 + r2)
         const_y = R2 - r2
 
-        x_sq = Mult(Var("x"), Var("x"))
-        y_sq = Mult(Var("y"), Var("y"))
-        z_sq = Mult(Var("z"), Var("z"))
+        x_sq = Var("x") * Var("x")
+        y_sq = Var("y") * Var("y")
+        z_sq = Var("z") * Var("z")
 
         sum_sq = Plus(x_sq, Plus(y_sq, z_sq))
 
-        if nom == "x":
-            terme_parenthese = Plus(sum_sq, Nb(const_xz))
+        if var == 'x':
+            terme_parenthese = sum_sq + Nb(const_xz)
             return Mult(Mult(Nb(4.0), Var("x")), terme_parenthese)
 
-        elif nom == "z":
-            terme_parenthese = Plus(sum_sq, Nb(const_xz))
+        elif var == 'z':
+            terme_parenthese = sum_sq + Nb(const_xz)
             return Mult(Mult(Nb(4.0), Var("z")), terme_parenthese)
 
-        elif nom == "y":
-            terme_parenthese = Plus(sum_sq, Nb(const_y))
+        elif var == 'y':
+            terme_parenthese = sum_sq + Nb(const_y)
             return Mult(Mult(Nb(4.0), Var("y")), terme_parenthese)
+
+        else:
+            return Nb(0.0)
+
+
+class CayleyDAG(DAG):
+    def __init__(self):
+        self.expr = x*x+y*y+z*z+x*x*z-y*y*z-Nb(1.0)
+
+    def to_poly(self, dico):
+
+        px = dico["x"].coefficients
+        py = dico["y"].coefficients
+        pz = dico["z"].coefficients
+
+        sx = px[0]
+        dx = px[1] if len(px) > 1 else 0.0
+
+        sy = py[0]
+        dy = py[1] if len(py) > 1 else 0.0
+
+        sz = pz[0]
+        dz = pz[1] if len(pz) > 1 else 0.0
+
+        sx2 = sx * sx
+        sy2 = sy * sy
+        sz2 = sz * sz
+
+        sdx = sx * dx
+        sdy = sy * dy
+        sdz = sz * dz
+
+        dx2 = dx * dx
+        dy2 = dy * dy
+        dz2 = dz * dz
+
+
+        A = dz * (dx2 - dy2)
+        B = dx2 + dy2 + dz2 + 2 * dz * (sdx - sdy) + sz * (dx2 - dy2)
+        C = dz * (sx2 - sy2) + 2 * (sdx + sdy + sdz) + 2 * sz * (sdx - sdy)
+        D = sx2 + sy2 + sz2 + sz * (sx2 - sy2) - 1
+
+        return Polynomial([D, C, B, A])
+
+    def partial(self, var):
+        if var == 'x':
+            return Nb(2.0) * x * (Nb(1.0) + z)
+        
+        elif var == 'y':
+            return Nb(2.0) * y * (Nb(1.0) - z)
+
+        elif var == 'z':
+            return Nb(2.0) * z + x * x - y * y
 
         else:
             return Nb(0.0)
