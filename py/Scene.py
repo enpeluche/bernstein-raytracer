@@ -63,7 +63,7 @@ class Scene:
             rayHit.pt, rayHit.plan, (red, green, blue)
         )
 
-        (red, green, blue) = self._apply_grid_pattern(rayHit, (red, green, blue))
+        # (red, green, blue) = self._apply_grid_pattern(rayHit, (red, green, blue))
 
         (red, green, blue) = self._apply_fog(rayHit.t, (red, green, blue))
 
@@ -151,7 +151,7 @@ class Scene:
 
         spacing = 0.25
 
-        K = 0.0015
+        K = 0.0008
 
         base_thickness = 0.003
 

@@ -3,8 +3,14 @@ from AABB import AABB
 from ObjectDAG import *
 
 
+class WhitneyUmbrella(Prim):
+    def __init__(self, color=None, T=None):
+        bbox = AABB((-1, -1, -1), (1, 1, 1))
+        super().__init__(WhitneyUmbrellaDAG(), color, T, None)
+
+
 class Caylay(Prim):
-    def __init__(self, color=None, T=None, bbox=None):
+    def __init__(self, color=None, T=None):
         super().__init__(CayleyDAG(), color, T, None)
 
 

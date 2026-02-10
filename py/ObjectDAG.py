@@ -5,6 +5,27 @@ y = Var("y")
 z = Var("z")
 
 
+class WhitneyUmbrellaDAG(DAG):
+    def __init__(self):
+        self.expr = x * x - y * y * z
+
+    def to_poly(self, dico):
+        return self.expr.to_poly(dico)
+
+    def partial(self, var):
+        if var == "x":
+            return Nb(2.0) * x
+
+        elif var == "y":
+            return Nb(-2.0) * y * z
+
+        elif var == "z":
+            return -(y * y)
+
+        else:
+            return Nb(0.0)
+
+
 # Degré 1
 class PlaneDAG(DAG):
     def __init__(self):

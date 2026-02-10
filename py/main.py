@@ -11,7 +11,7 @@ camera = CameraPerspective(
     cam_dx=(1.0, 0.0, 0.0),
     cam_dy=(0.0, 1.0, 0.0),  # la direction des rayons aussi
     cam_dz=(0.0, 0.0, 1.0),
-    size_world=1,
+    size_world=2,
     size_win=500,
     light_dir=(0, -1, 1),
     name="",
@@ -29,10 +29,11 @@ S2 = Steiner2()
 S4 = Steiner4()
 
 P.translate(0, 0, -1)
-
-scene = Scene(camera, C & S)
+W = WhitneyUmbrella(color=(133, 87, 200))
+scene = Scene(camera, W)
 renderer = Renderer(scene)
 
-renderer.render()
-
+for _ in range(180):
+    W.rotate_z(DEG).rotate_y(DEG).rotate_z(DEG)
+    renderer.render()
 renderer.save(format="gif")

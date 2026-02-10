@@ -2,7 +2,7 @@ PI = 3.1415926565
 DEG = PI / 180.0
 
 FOG_START = 5.0
-FOG_END = 20.0
+FOG_END = 5.5
 
 shadow_bias = 0.001
 shadow_opacity = 0.5
