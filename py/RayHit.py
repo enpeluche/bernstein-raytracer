@@ -1,12 +1,19 @@
-from Matrix import Matrix
-
-
 class RayHit:
     """ """
 
-    __slots__ = ("t", "pt", "plan", "color")
+    __slots__ = (
+        "t",
+        "pt",
+        "local_pt",
+        "plan",
+        "color",
+        "apply_face_color",
+        "apply_grid_pattern",
+    )
 
-    def __init__(self, t, pt, plan, color):
+    def __init__(
+        self, t, pt, local_pt, plan, color, apply_face_color, apply_grid_pattern
+    ):
         """
 
         Args:
@@ -17,8 +24,11 @@ class RayHit:
         """
         self.t = t
         self.pt = pt
+        self.local_pt = local_pt
         self.plan = plan
         self.color = color
+        self.apply_face_color = apply_face_color
+        self.apply_grid_pattern = apply_grid_pattern
 
     def __repr__(self):
         return f"RayHit(t={self.t:.3f} pt={self.pt[0]:.3f}, {self.pt[1]:.3f}, {self.pt[2]:.3f}, plan={self.plan[0]:.3f}, {self.plan[1]:.3f}, {self.plan[2]:.3f}, color={self.color})\n"
