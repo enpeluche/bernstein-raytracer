@@ -89,6 +89,10 @@ class AABB:
         return self
 
     def __add__(self, other):
+        if self is None:
+            return other
+        if other is None:
+            return self
         new_p1 = (
             min(self.bounds_start[0], other.bounds_start[0]),
             min(self.bounds_start[1], other.bounds_start[1]),
