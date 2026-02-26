@@ -4,20 +4,20 @@ from ObjectDAG import *
 
 
 class WhitneyUmbrella(Prim):
-    def __init__(self, color=None, T=None):
+    def __init__(self, color=None, T=None, apply_grid_pattern=False):
         bbox = AABB((-1, -1, -1), (1, 1, 1))
-        super().__init__(WhitneyUmbrellaDAG(), color, T, None)
+        super().__init__(WhitneyUmbrellaDAG(), color, True, apply_grid_pattern, T, None)
 
 
 class Caylay(Prim):
-    def __init__(self, color=None, T=None):
-        super().__init__(CayleyDAG(), color, T, None)
+    def __init__(self, color=None, T=None, apply_grid_pattern=False):
+        super().__init__(CayleyDAG(), color, True, apply_grid_pattern, T, None)
 
 
 class Plane(Prim):
-    def __init__(self, color=None, T=None):
+    def __init__(self, color=None, T=None, apply_grid_pattern=False):
 
-        super().__init__(PlaneDAG(), color, T, None)
+        super().__init__(PlaneDAG(), color, True, apply_grid_pattern, T, None)
 
     def intersection(self, ray):
 
@@ -57,40 +57,40 @@ class Plane(Prim):
 
 
 class Cylindre(Prim):
-    def __init__(self, r, color=None, T=None):
+    def __init__(self, r, color=None, T=None, apply_grid_pattern=False):
         bbox = AABB(
             (-r, -r, -float("inf")),
             (r, r, float("inf")),
         )
 
-        super().__init__(CylindreDAG(r), color, T, bbox)
+        super().__init__(CylindreDAG(r), color, True, apply_grid_pattern, T, bbox)
 
 
 class Sphere(Prim):
-    def __init__(self, r, T=None, color=None):
+    def __init__(self, r, T=None, color=None, apply_grid_pattern=False):
 
         bbox = AABB(
             (-r, -r, -r),
             (r, r, r),
         )
 
-        super().__init__(SphereDAG(r), color, T, bbox)
+        super().__init__(SphereDAG(r), color, True, apply_grid_pattern, T, bbox)
 
 
 class Tore(Prim):
-    def __init__(self, r, R, T=None, color=None):
+    def __init__(self, r, R, T=None, color=None, apply_grid_pattern=False):
 
         bbox = AABB((-r - R, -r, -r - R), (r + R, r, r + R))
 
-        super().__init__(ToreDAG(r, R), color, T, bbox)
+        super().__init__(ToreDAG(r, R), color, True, apply_grid_pattern, T, bbox)
 
 
 class Roman(Prim):
-    def __init__(self, T=None, color=None):
+    def __init__(self, T=None, color=None, apply_grid_pattern=False):
 
         bbox = AABB((-1, -1, -1), (1, 1, 1))
 
-        super().__init__(RomanDAG(), color, T, bbox)
+        super().__init__(RomanDAG(), color, True, apply_grid_pattern, T, bbox)
 
     def _gradient(self, x, y, z):
         a = 2.0 * x * y * y + 2.0 * x * z * z - 2.0 * y * z
@@ -107,24 +107,28 @@ class Roman(Prim):
 
 
 class Steiner2(Prim):
-    def __init__(self, T=None, color=None):
+    def __init__(self, T=None, color=None, apply_grid_pattern=False):
 
-        super().__init__(Steiner2DAG(), color, T, None)
+        super().__init__(Steiner2DAG(), color, True, apply_grid_pattern, T, None)
 
 
 class Steiner4(Prim):
-    def __init__(self, T=None, color=None):
+    def __init__(self, T=None, color=None, apply_grid_pattern=False):
 
-        super().__init__(Steiner4DAG(), color, T, None)
+        super().__init__(Steiner4DAG(), color, True, apply_grid_pattern, T, None)
 
 
 class HyperboloidTwoSheets(Prim):
-    def __init__(self, T=None, color=None):
+    def __init__(self, T=None, color=None, apply_grid_pattern=False):
 
-        super().__init__(HyperboloidTwoSheetsDAG(), color, T, None)
+        super().__init__(
+            HyperboloidTwoSheetsDAG(), color, True, apply_grid_pattern, T, None
+        )
 
 
 class HyperboloidOneSheet(Prim):
-    def __init__(self, T=None, color=None):
+    def __init__(self, T=None, color=None, apply_grid_pattern=False):
 
-        super().__init__(HyperboloidOneSheetDAG(), color, T, None)
+        super().__init__(
+            HyperboloidOneSheetDAG(), color, True, apply_grid_pattern, T, None
+        )
