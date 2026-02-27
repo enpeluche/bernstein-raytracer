@@ -1,4 +1,4 @@
-from constants import DEG, white
+from constants import DEG, WHITE
 from Cameras import CameraPerspective, OrthographicCamera
 from Scene import Scene
 from Shapes import *
@@ -27,7 +27,7 @@ orthographic_camera = OrthographicCamera(
     name="",
 )
 
-P2 = Plane(color=white).rotate_x(90 * DEG).translate(0, 5, 0)
+P2 = Plane(color=WHITE).rotate_x(90 * DEG).translate(0, 5, 0)
 
 
 def demo_sphere():
@@ -488,7 +488,7 @@ def demo_barillet_anim():
     barillet = barillet_base - trou_central - t0 - t1 - t2 - t3 - t4 - t5
 
     barillet.rotate_x(45 * DEG).rotate_y(30 * DEG)
-    sol = Plane(color=white, apply_grid_pattern=False).translate(0, 0, -1.5)
+    sol = Plane(color=WHITE, apply_grid_pattern=False).translate(0, 0, -1.5)
 
     world = sol + barillet
     scene_perspective = Scene(perspective_camera, sol + barillet)
@@ -569,7 +569,7 @@ def creer_cube_csg(color=(50, 150, 255), apply_grid_pattern=True):
 
 
 def demo_cube_csg():
-    print("🎬 Démo : Le Cube CSG (Intersection de 6 HalfSpaces)")
+    print("Démo : Le Cube CSG (Intersection de 6 HalfSpaces)")
 
     # On crée notre cube et on l'incline pour le style
     mon_cube = creer_cube_csg(color=(240, 47, 79), apply_grid_pattern=False)
