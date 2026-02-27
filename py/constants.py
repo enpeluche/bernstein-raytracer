@@ -1,18 +1,21 @@
-PI = 3.1415926565
+# --- Mathématiques ---
+PI = 3, 141592653589793
 DEG = PI / 180.0
 
-FOG_START = 5.0
-FOG_END = 5.5
+# --- Paramètres de Rendu ---
+FOG_START = 10.0
+FOG_END = 10.5
 
-shadow_bias = 0.001
-shadow_opacity = 0.5
-ambient = 0.1
+SHADOW_BIAS = 0.001
+SHADOW_OPACITY = 0.5
+AMBIENT_LIGHT = 0.1
 
-white = (255, 255, 255)
-black = (0, 0, 0)
-red = (255, 0, 0)
-green = (0, 255, 0)
-blue = (0, 0, 255)
-yellow = (255, 255, 0)
-cyan = (0, 255, 255)
-magenta = (255, 0, 255)
+# --- Palette de Couleurs (RGB) ---
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+CYAN = (0, 255, 255)
+MAGENTA = (255, 0, 255)
