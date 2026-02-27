@@ -2,10 +2,12 @@ from Polynomial import *
 
 
 class DAG:
-    __slots__ = ()
+    """
+    Classe de base pour le Graphe Orienté Acyclique (Directed Acyclic Graph).
+    Représente un nœud dans un arbre de calcul symbolique.
+    """
 
-    def __init__(self):
-        " "
+    __slots__ = ()
 
     def __neg__(self):
         """Surcharge de l'opérateur unaire '-' (ex: -Var('x'))"""
@@ -19,47 +21,55 @@ class DAG:
         return Opp(self)
 
     def __add__(self, b):
+        """Surcharge de l'opérateur '+' avec simplification algébrique."""
 
-        # Nb(0) + b -> b
+        # 0 + b -> b
         if isinstance(self, Nb) and self.nb == 0:
             return b
 
-        # self + Nb(0) -> self
+        # a + 0 -> a
         if isinstance(b, Nb) and b.nb == 0:
             return self
 
+        # Constante + Constante -> Constante évaluée
         if isinstance(self, Nb) and isinstance(b, Nb):
             return Nb(self.nb + b.nb)
 
         return Plus(self, b)
 
     def __mul__(self, b):
-        # Nb(1) * b -> b
+        """Surcharge de l'opérateur '*' avec simplification algébrique."""
+
+        # 1 * b -> b
         if isinstance(self, Nb) and self.nb == 1:
             return b
 
-        # self * Nb(1) -> self
+        # a * 1 -> a
         if isinstance(b, Nb) and b.nb == 1:
             return self
 
-        # Nb(0) * b -> Nb(0)
+        # 0 * b -> 0
         if isinstance(self, Nb) and self.nb == 0:
             return Nb(0.0)
 
-        # self * Nb(0) -> Nb(0)
+        # a * 0 -> 0
         if isinstance(b, Nb) and b.nb == 0:
             return Nb(0.0)
 
+        # Constante * Constante -> Constante évaluée
         if isinstance(self, Nb) and isinstance(b, Nb):
             return Nb(self.nb * b.nb)
 
         return Mult(self, b)
 
     def __sub__(self, b):
+        """Surcharge de l'opérateur '-'."""
         return self + (-b)
 
 
 class Opp(DAG):
+    """Nœud représentant l'opposé mathématique d'une expression (-a)."""
+
     __slots__ = "a"
 
     def __init__(self, a):
@@ -86,6 +96,8 @@ class Opp(DAG):
 
 
 class Plus(DAG):
+    """Nœud représentant l'addition de deux expressions (a + b)."""
+
     __slots__ = ("a", "b")
 
     def __init__(self, a, b):
@@ -99,6 +111,7 @@ class Plus(DAG):
         return self.a.evalsymb(dico) + self.b.evalsymb(dico)
 
     def partial(self, var):
+        # La dérivée d'une somme est la somme des dérivées : (a + b)' = a' + b'
         return self.a.partial(var) + self.b.partial(var)
 
     def topolent(self):
@@ -112,6 +125,8 @@ class Plus(DAG):
 
 
 class Mult(DAG):
+    """Nœud représentant la multiplication de deux expressions (a * b)."""
+
     __slots__ = ("a", "b")
 
     def __init__(self, a, b):
@@ -125,13 +140,13 @@ class Mult(DAG):
         return self.a.evalsymb(dico) * self.b.evalsymb(dico)
 
     def partial(self, var):
+        # Règle du produit : (a * b)' = a'b + ab'
         return self.a.partial(var) * self.b + self.a * self.b.partial(var)
 
     def topolent(self):
         return self.a.topolent() * self.b.topolent()
 
     def to_poly(self, dico):
-        # On multiplie directement les polynômes
         return self.a.to_poly(dico) * self.b.to_poly(dico)
 
     def __str__(self):
@@ -139,6 +154,8 @@ class Mult(DAG):
 
 
 class Nb(DAG):
+    """Feuille du graphe représentant une constante numérique."""
+
     __slots__ = "nb"
 
     def __init__(self, n):
@@ -151,6 +168,7 @@ class Nb(DAG):
         return self
 
     def partial(self, var):
+        # La dérivée d'une constante est 0
         return Nb(0.0)
 
     def topolent(self):
@@ -165,6 +183,8 @@ class Nb(DAG):
 
 
 class Var(DAG):
+    """Feuille du graphe représentant une variable symbolique (ex: 'x', 'y', 'z')."""
+
     __slots__ = "var"
 
     def __init__(self, var):
@@ -178,6 +198,7 @@ class Var(DAG):
             return Var(self.var)
 
     def partial(self, var):
+        # La dérivée de x par rapport à x est 1. Par rapport à y, c'est 0.
         if self.var == var:
             return Nb(1.0)
 

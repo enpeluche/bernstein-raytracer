@@ -50,6 +50,9 @@ def translation(tx, ty, tz):
         tx (float): Translation sur l'axe Ox.
         ty (float): Translation sur l'axe Oy.
         tz (float): Translation sur l'axe Oz.
+
+    Returns:
+        Transformation: La transformation correspondante (matrices forward et backward).
     """
 
     forward = [[1, 0, 0, tx],
@@ -71,6 +74,9 @@ def rotation_x(θ):
 
     Args:
         θ (float): Angle de rotation en radians.
+
+    Returns:
+        Transformation: La transformation correspondante (matrices forward et backward).
     """
 
     forward = [
@@ -96,6 +102,9 @@ def rotation_y(θ):
 
     Args:
         θ (float): Angle de rotation en radians.
+
+    Returns:
+        Transformation: La transformation correspondante (matrices forward et backward).
     """
 
     forward = [
@@ -120,6 +129,9 @@ def rotation_z(θ):
 
     Args:
         θ (float): Angle de rotation en radians.
+
+    Returns:
+        Transformation: La transformation correspondante (matrices forward et backward).
     """
 
     forward = [
@@ -149,6 +161,9 @@ def scaling(a, b, c):
 
     Raises:
         ValueError: Si a, b ou c est égal à 0.
+
+    Returns:
+        Transformation: La transformation correspondante (matrices forward et backward).
     """
     if a==0 or b==0 or c==0:
         raise ValueError(f"Impossible de créer une affinité avec un facteur nul (a:{a}, b:{b}, c:{c}).")
@@ -171,6 +186,9 @@ def scaling(a, b, c):
 def identity():
     """
     Retourne la transformation identité.
+
+    Returns:
+        Transformation: La transformation correspondante (matrices forward et backward).
     """
     I = [
         [1, 0, 0, 0],

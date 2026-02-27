@@ -1,15 +1,23 @@
 def midpoints(points):
     """
-    Calcul les milieux entre chaque paire de points consécutifs et renvoie un tuple.
+    Calcule les milieux entre chaque paire de points consécutifs.
 
     Args:
-        v (tuple): Description
+        points (list[float] | tuple): La liste des points de contrôle.
+
+    Returns:
+        list[float]: Une nouvelle liste contenant les points milieux.
     """
 
     return [(points[i] + points[i + 1]) * 0.5 for i in range(len(points) - 1)]
 
 
 def old_Casteljau(points):
+    """
+    Ancienne version de l'algorithme de De Casteljau (conservée pour historique).
+    Utilise une approche matricielle complète (pyramide de listes).
+    """
+
     pv, dv, sv = [], [], []
 
     sv.append(points)
@@ -25,6 +33,21 @@ def old_Casteljau(points):
 
 
 def Casteljau(v):
+    """
+    Subdivise une courbe de Bézier (polynôme de Bernstein) en deux moitiés égales.
+
+    Cette version est hautement optimisée avec un déroulage de boucle pour
+    les degrés 2, 3 et 4 (qui représentent 99% des appels du moteur de rendu).
+    Pour les degrés supérieurs, elle utilise une approche en place plus économe en mémoire.
+
+    Args:
+        v (list[float] | tuple): Les points de contrôle du segment.
+
+    Returns:
+        tuple[list[float], list[float]]: Deux listes contenant les points de contrôle
+                                         de la moitié gauche et de la moitié droite.
+    """
+
     n = len(v)
 
     # Degré 2 (Sphères, Cylindres...)
@@ -53,6 +76,7 @@ def Casteljau(v):
 
         return ([p0, m0, n0, s], [s, n1, m2, p3])
 
+    # Degré 4 (Tore, Goursat...)
     if n == 5:
         c0, c1, c2, c3, c4 = v
 
@@ -72,6 +96,7 @@ def Casteljau(v):
 
         return ([c0, m0, m01, m012, m0123], [m0123, m123, m23, m3, c4])
 
+    # Cas général (Degré 5 et supérieur)
     temp = list(v)
 
     pv = [temp[0]]

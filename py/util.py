@@ -1,4 +1,4 @@
-import math
+from math import sqrt
 
 
 def normalize3(v):
@@ -10,12 +10,12 @@ def normalize3(v):
         v (tuple[float, float, float]): Le vecteur à normaliser.
 
     Returns:
-        tuple: Un nouveau tuple de même direction mais de norme 1.
+        tuple[float, float, float]: Un nouveau tuple de même direction mais de norme 1.
     """
 
     (vx, vy, vz) = v
 
-    norm = math.sqrt(vx * vx + vy * vy + vz * vz)
+    norm = sqrt(vx * vx + vy * vy + vz * vz)
 
     if 0.0 == norm:
         return (0.0, 0.0, 0.0)
@@ -26,7 +26,7 @@ def normalize3(v):
 # NOTE to clamp : verouiller
 def clamp(m, M, x):
     """
-    Restreint v à l'intervalle [m, M].
+    Restreint x à l'intervalle [m, M].
     Plus de détails sur cette fonction sont dans le README.
 
     Args:

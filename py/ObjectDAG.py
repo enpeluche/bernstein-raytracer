@@ -136,17 +136,15 @@ class RomanDAG(DAG):
 #fmt : on
 
 class SphereDAG(DAG):
-    __slots__ = ("r2")
+    __slots__ = ("r2",)
 
     def __init__(self, r):
         self.r2 = float(r * r)
 
     def to_poly(self, dico):
         """
-        Surcharge de la méthode to_poly
-
-        :param self: Description
-        :param dico: Description
+        Génère directement le polynôme d'intersection paramétrique t pour une sphère,
+        sans passer par l'évaluation symbolique (optimisation extrême).
         """
         px = dico["x"].coefficients
         py = dico["y"].coefficients
@@ -169,13 +167,13 @@ class SphereDAG(DAG):
 
     def partial(self, var):
         if var == 'x':
-            return Nb(2.0) * Var("x")
+            return Nb(2.0) * x
 
         elif var == 'y':
-            return Nb(2.0) * Var("y")
+            return Nb(2.0) * y
 
         elif var == 'z':
-            return Nb(2.0) * Var("z")
+            return Nb(2.0) * z
 
         else:
             return Nb(0.0)
@@ -189,12 +187,9 @@ class ToreDAG(DAG):
         self.R2 = float(R * R)
 
     def to_poly(self, dico):
-
         """
-        Surcharge de la méthode to_poly
-        
-        :param self: Description
-        :param dico: Description
+        Génère directement le polynôme de degré 4 pour l'intersection d'un tore.
+        L'expansion algébrique manuelle évite le coût de l'arbre syntaxique (DAG).
         """
 
         px = dico["x"].coefficients
@@ -258,23 +253,23 @@ class ToreDAG(DAG):
         const_xz = -(R2 + r2)
         const_y = R2 - r2
 
-        x_sq = Var("x") * Var("x")
-        y_sq = Var("y") * Var("y")
-        z_sq = Var("z") * Var("z")
+        x_sq = x * x
+        y_sq = y * y
+        z_sq = z * z
 
         sum_sq = Plus(x_sq, Plus(y_sq, z_sq))
 
         if var == 'x':
             terme_parenthese = sum_sq + Nb(const_xz)
-            return Mult(Mult(Nb(4.0), Var("x")), terme_parenthese)
+            return Mult(Mult(Nb(4.0), x), terme_parenthese)
 
         elif var == 'z':
             terme_parenthese = sum_sq + Nb(const_xz)
-            return Mult(Mult(Nb(4.0), Var("z")), terme_parenthese)
+            return Mult(Mult(Nb(4.0), z), terme_parenthese)
 
         elif var == 'y':
             terme_parenthese = sum_sq + Nb(const_y)
-            return Mult(Mult(Nb(4.0), Var("y")), terme_parenthese)
+            return Mult(Mult(Nb(4.0), y), terme_parenthese)
 
         else:
             return Nb(0.0)
