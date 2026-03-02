@@ -1,4 +1,5 @@
 from Casteljau import Casteljau
+from constants import EPSILON
 
 # NOTE TECHNIQUE : Localisation vs Multiplicité
 # Dans un contexte géométrique (intersection rayon-surface), seule la position
@@ -9,7 +10,6 @@ from Casteljau import Casteljau
 
 
 def solve(
-    epsilon: float,
     tab: list[float],
     t1: float,
     t2: float,
@@ -21,7 +21,6 @@ def solve(
     en utilisant la subdivision récursive de De Casteljau.
 
     Args:
-        epsilon (float): La précision souhaitée (taille de l'intervalle dt).
         tab (list[float]): Les points de contrôle du segment de courbe actuel.
         t1 (float): Borne paramétrique inférieure.
         t2 (float): Borne paramétrique supérieure.
@@ -44,7 +43,7 @@ def solve(
     # 3. Test de précision : l'intervalle est-il assez fin ?
     dt = t2 - t1
 
-    if dt < epsilon:
+    if dt < EPSILON:
         solutions.append((t1 + t2) * 0.5)
         return solutions
 
@@ -53,7 +52,7 @@ def solve(
 
     tm = (t1 + t2) * 0.5
 
-    solve(epsilon, tab1, t1, tm, solutions, depth + 1)
-    solve(epsilon, tab2, tm, t2, solutions, depth + 1)
+    solve(tab1, t1, tm, solutions, depth + 1)
+    solve(tab2, tm, t2, solutions, depth + 1)
 
     return solutions
