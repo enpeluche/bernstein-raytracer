@@ -12,9 +12,7 @@ from RayHit import RayHit
 from Transformation import *
 from random import randint
 
-
-def random_color():
-    return (randint(0, 255), randint(0, 255), randint(0, 255))
+pi = 3.141592
 
 
 class Obj:

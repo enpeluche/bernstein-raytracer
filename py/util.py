@@ -83,3 +83,9 @@ def cross(
     v0, v1, v2 = v
 
     return (u1 * v2 - u2 * v1, u2 * v0 - u0 * v2, u0 * v1 - u1 * v0)
+
+
+def random_color():
+
+    """Génère une couleur RGB aléatoire."""
+    return (randint(0, 255), randint(0, 255), randint(0, 255))
