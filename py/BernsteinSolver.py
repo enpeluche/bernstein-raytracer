@@ -14,7 +14,7 @@ def solve(
     t1: float,
     t2: float,
     solutions: list[float],
-    depth=0,
+    depth: int = 0,
 ) -> list[float]:
     """
     Trouve les racines d'un polynôme défini par ses points de contrôle (base de Bernstein)
