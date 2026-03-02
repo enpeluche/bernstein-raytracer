@@ -1,4 +1,6 @@
 from Matrix import Matrix
+from Transformation import Transformation
+from util import normalize3
 
 
 class Ray:
@@ -8,10 +10,14 @@ class Ray:
     Un rayon est défini par une équation paramétrique de la forme :
     R(t) = source + t * direction, pour tout t appartenant à R.
 
-    Note : Pour plus de détails, se réferer à la section 'Le rayon' du README.
+    NOTE : Pour plus de détails, se réferer à la section 'Le rayon' du README.
     """
 
-    def __init__(self, origin, direction):
+    __slots__ = ("origin", "direction")
+
+    def __init__(
+        self, origin: tuple[float, float, float], direction: tuple[float, float, float]
+    ) -> None:
         """
         Initialise un nouveau rayon.
 
@@ -20,9 +26,9 @@ class Ray:
             direction (tuple[float, float, float]) :Le vecteur de direction du rayon.
         """
         self.origin = origin
-        self.direction = direction
+        self.direction = normalize3(direction)
 
-    def transform(self, T):
+    def transform(self, T: Transformation) -> "Ray":
         """
         Transforme le rayon en un nouveau rayon selon une matrice donnée.
 
@@ -43,8 +49,10 @@ class Ray:
         # w=0 car la direction est un vecteur (non affecté par la translation)
         direction_mat = Matrix([[dx], [dy], [dz], [0]])
 
-        transformed_origin_mat = T.forward * origin_mat
-        transformed_direction_mat = T.forward * direction_mat
+        M = T.forward
+
+        transformed_origin_mat = M * origin_mat
+        transformed_direction_mat = M * direction_mat
 
         return Ray(
             transformed_origin_mat.to_tuple()[:3],
