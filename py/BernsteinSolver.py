@@ -1,7 +1,21 @@
-from Casteljau import *
+from Casteljau import Casteljau
+
+# NOTE TECHNIQUE : Localisation vs Multiplicité
+# Dans un contexte géométrique (intersection rayon-surface), seule la position
+# topologique des racines est requise. La multiplicité algébrique n'est pas
+# traitée ici : les racines multiples ou tangentes sont ramenées à une valeur
+# unique. Cela optimise la stabilité numérique et répond au besoin du moteur
+# de rendu (détection d'impact).
 
 
-def solve(epsilon, tab, t1, t2, solutions, depth=0):
+def solve(
+    epsilon: float,
+    tab: list[float],
+    t1: float,
+    t2: float,
+    solutions: list[float],
+    depth=0,
+) -> list[float]:
     """
     Trouve les racines d'un polynôme défini par ses points de contrôle (base de Bernstein)
     en utilisant la subdivision récursive de De Casteljau.
