@@ -1,4 +1,5 @@
 from math import sqrt
+from random import randint
 
 
 def normalize3(v: tuple[float, float, float]) -> tuple[float, float, float]:
