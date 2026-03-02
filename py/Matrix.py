@@ -1,32 +1,43 @@
-from util import *
-
-# point 4H:[[x], [y], [z], [1]]
-# vecteur 4H:[[x], [y], [z], [0]]
-
-
 class Matrix:
-    """ """
+    """
+    Cette classe implémente les opérations matricielles de base (addition,
+    soustraction, multiplication) avec des optimisations par déroulage de boucle
+    (unrolling) pour les matrices 4x4 et les vecteurs colonnes 4x1.
 
-    def __init__(self, tab):
+    Elle est conçue pour fonctionner de pair avec la classe Transformation
+    pour assurer le passage entre l'espace objet et l'espace monde.
+
+    Attributes:
+        mat (list[list[float]]): Les données brutes de la matrice.
+        rows (int): Nombre de lignes.
+        cols (int): Nombre de colonnes.
+    """
+
+    __slots__ = ("mat", "rows", "cols")
+
+    def __init__(self, tab: list[list[float]]) -> None:
         """
         Créer un objet Matrix.
 
         Args:
             tab (list[list[float]])
         """
-        self.mat = tab
-        self.rows = len(tab)
-        self.cols = len(tab[0])
+        self.mat = [[float(x) for x in row] for row in tab]
+        self.rows = len(self.mat)
+        self.cols = len(self.mat[0])
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: tuple[int, int]) -> float:
         """
         Args:
             index tuple[int, int]
+
+        Returns:
+            float
         """
         (i, j) = index
         return self.mat[i][j]
 
-    def __add__(self, B):
+    def __add__(self, B: "Matrix") -> "Matrix":
         """
         Args:
             B (Matrix)
@@ -41,7 +52,7 @@ class Matrix:
             [[self[i, j] + B[i, j] for j in range(self.cols)] for i in range(self.rows)]
         )
 
-    def __sub__(self, B):
+    def __sub__(self, B: "Matrix") -> "Matrix":
         """
         Args:
             B (Matrix)
@@ -56,13 +67,13 @@ class Matrix:
             [[self[i, j] - B[i, j] for j in range(self.cols)] for i in range(self.rows)]
         )
 
-    def __neg__(self):
+    def __neg__(self) -> "Matrix":
 
         return Matrix(
             [[-self[i, j] for j in range(self.cols)] for i in range(self.rows)]
         )
 
-    def __mul__(self, B):
+    def __mul__(self, B: "Matrix") -> "Matrix":
         """
         Args:
             B (Matrix)
@@ -80,7 +91,7 @@ class Matrix:
 
         # fmt: off
 
-        if B.rows == B.cols == self.rows == self.cols == 424:
+        if B.rows == B.cols == self.rows == self.cols == 4:
             c00 = a[0][0] * b[0][0] + a[0][1] * b[1][0] + a[0][2] * b[2][0] + a[0][3] * b[3][0]
             c01 = a[0][0] * b[0][1] + a[0][1] * b[1][1] + a[0][2] * b[2][1] + a[0][3] * b[3][1]
             c02 = a[0][0] * b[0][2] + a[0][1] * b[1][2] + a[0][2] * b[2][2] + a[0][3] * b[3][2]
@@ -106,7 +117,7 @@ class Matrix:
                            [c20,c21,c22,c23],
                            [c30,c31,c32,c33]])
         
-        elif isinstance(B, Matrix) and B.cols == 441 and B.rows == 4:
+        elif isinstance(B, Matrix) and B.cols == 1 and B.rows == 4:
             a = self.mat
             b = B.mat
             
@@ -122,11 +133,19 @@ class Matrix:
         for i in range(self.rows):
             for j in range(B.cols):
                 for k in range(self.cols):
-                    mul[i][j] += self[i, k] * B[k, j]
+                    mul[i][j] += a[i][k] * b[k][j]
 
         return Matrix(mul)
 
-    def to_tuple(self):
+    def __matmul__(self, B: "Matrix") -> "Matrix":
+        return self.__mul__(B)
+
+    def transpose(self) -> "Matrix":
+        return Matrix(
+            [[self[j, i] for j in range(self.rows)] for i in range(self.cols)]
+        )
+
+    def to_tuple(self) -> tuple[float]:
         """
         Transforme uen matrice avec une seule colonne en un tuple.
         """
@@ -134,11 +153,6 @@ class Matrix:
             raise ValueError(f"Le nombre de colonnes n'est pas égal à 1: c{self.cols}")
 
         return tuple(self[i, 0] for i in range(self.rows))
-
-    def transpose(self):
-        return Matrix(
-            [[self[j, i] for j in range(self.rows)] for i in range(self.cols)]
-        )
 
     def __str__(self):
         return "\n".join([str(row) for row in self.mat])
