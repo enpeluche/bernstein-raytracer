@@ -1,5 +1,6 @@
 from math import sqrt
 from random import randint
+from constants import EPSILON
 
 
 def normalize3(v: tuple[float, float, float]) -> tuple[float, float, float]:
@@ -18,7 +19,7 @@ def normalize3(v: tuple[float, float, float]) -> tuple[float, float, float]:
 
     norm = sqrt(vx * vx + vy * vy + vz * vz)
 
-    if 0.0 == norm:
+    if norm < EPSILON:
         return (0.0, 0.0, 0.0)
     else:
         return (vx / norm, vy / norm, vz / norm)
