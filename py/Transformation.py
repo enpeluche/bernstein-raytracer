@@ -11,7 +11,7 @@ class Transformation:
     Elle stocke la transformation directe et son inverse pour optimiser les calculs.
     """
 
-    __slots__ = ("froward", "backward")
+    __slots__ = ("forward", "backward")
 
     def __init__(
         self, forward: Matrix | tuple[tuple], backward: Matrix | tuple[tuple]
