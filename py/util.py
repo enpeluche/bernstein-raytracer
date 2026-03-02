@@ -1,7 +1,7 @@
 from math import sqrt
 
 
-def normalize3(v):
+def normalize3(v: tuple[float, float, float]) -> tuple[float, float, float]:
     """
     Normalise un vecteur 3D pour lui donner une longueur de 1.
     Plus de détails sur cette fonction sont dans le README.
@@ -24,7 +24,7 @@ def normalize3(v):
 
 
 # NOTE to clamp : verouiller
-def clamp(m, M, x):
+def clamp(m: float, M: float, x: float) -> float:
     """
     Restreint x à l'intervalle [m, M].
     Plus de détails sur cette fonction sont dans le README.
@@ -40,7 +40,7 @@ def clamp(m, M, x):
     return min(M, max(m, x))
 
 
-def interpole(x1, y1, x2, y2, x):
+def interpole(x1: float, y1: float, x2: float, y2: float, x: float) -> float:
     """
     Calcul l'image de x par interpolation linéaire entre deux points.
 
@@ -64,3 +64,22 @@ def interpole(x1, y1, x2, y2, x):
     assert x1 != x2
 
     return ((x - x2) / (x1 - x2)) * y1 + ((x - x1) / (x2 - x1)) * y2
+
+
+def cross(
+    u: tuple[float, float, float], v: tuple[float, float, float]
+) -> tuple[float, float, float]:
+    """
+    Calcul le produit vectoriel de u et v.
+
+    Args:
+        u (tuple[float, float, float])
+        v (tuple[float, float, float])
+
+    Returns:
+        w (tuple[float, float, float])
+    """
+    u0, u1, u2 = u
+    v0, v1, v2 = v
+
+    return (u1 * v2 - u2 * v1, u2 * v0 - u0 * v2, u0 * v1 - u1 * v0)
