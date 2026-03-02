@@ -4,10 +4,16 @@ from Matrix import Matrix
 
 class Transformation:
     """
-    Représente une transformation de l'espace, contenant la transformation dans un sens, et dans le sens inverse.
+    Représente une transformation de l'espace dans le groupe affine Aff(3).
+
+    Cette classe manipule des matrices de passage 4x4 en coordonnées homogènes,
+    permettant de combiner rotations, translations et homothéties.
+    Elle stocke la transformation directe et son inverse pour optimiser les calculs.
     """
 
-    def __init__(self, forward, backward):
+    def __init__(
+        self, forward: Matrix | tuple[tuple], backward: Matrix | tuple[tuple]
+    ) -> None:
         """
         Args:
             forward (Matrix or tuple[tuple]): La matrice de la transformation (doit être inversible).
@@ -23,7 +29,7 @@ class Transformation:
         else:
             self.backward = Matrix(backward)
 
-    def __mul__(self, a):
+    def __mul__(self, a: "Transformation") -> "Transformation":
         """
         Surcharge de l'opérateur *.
         Renvoie la transformation résultante d'effectuer la transformation a puis la transformation self.
@@ -33,7 +39,7 @@ class Transformation:
         """
         return Transformation(self.forward * a.forward, a.backward * self.backward)
 
-    def __invert__(self):
+    def __invert__(self) -> "Transformation":
         """
         Surcharge de l'opérateur ~.
         Retourne sa transformation inverse.
@@ -42,7 +48,7 @@ class Transformation:
 
 
 # fmt: off
-def translation(tx, ty, tz):
+def translation(tx:float, ty:float, tz:float) -> Transformation:
     """
     Retourne une transformation qui effectue une translation de l'objet.
 
@@ -68,7 +74,7 @@ def translation(tx, ty, tz):
     return Transformation(forward, backward)
 
 
-def rotation_x(θ):
+def rotation_x(θ:float) -> Transformation:
     """
     Retourne la transformation qui effectue une rotation de l'objet autour de l'axe x.
 
@@ -96,7 +102,7 @@ def rotation_x(θ):
     return Transformation(forward, backward)
 
 
-def rotation_y(θ):
+def rotation_y(θ:float) -> Transformation:
     """
     Retourne la transformation qui effectue une rotation de l'objet autour de l'axe y.
 
@@ -123,7 +129,7 @@ def rotation_y(θ):
     return Transformation(forward, backward)
 
 
-def rotation_z(θ):
+def rotation_z(θ:float) -> Transformation:
     """
     Retourne la transformation qui effectue une rotation de l'objet autour de l'axe z.
 
@@ -150,7 +156,7 @@ def rotation_z(θ):
     return Transformation(forward, backward)
 
 
-def scaling(a, b, c):
+def scaling(a:float, b:float, c:float) -> Transformation:
     """
     Retourne la transformation qui étire l'objet.
 
@@ -183,7 +189,7 @@ def scaling(a, b, c):
 
     return Transformation(forward, backward)
 
-def identity():
+def identity() -> Transformation:
     """
     Retourne la transformation identité.
 
