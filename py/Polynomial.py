@@ -3,14 +3,14 @@ from Casteljau import *
 from BernsteinSolver import solve
 from math import sqrt, comb
 
-EPS = 1e-8
+from constants import EPSILON
 
 
-def unique_with_epsilon(values, eps=EPS):
+def unique_with_epsilon(values):
     values = sorted(values)
     result = []
     for v in values:
-        if not result or abs(v - result[-1]) > eps:
+        if not result or abs(v - result[-1]) > EPSILON:
             result.append(v)
     return result
 
@@ -261,12 +261,12 @@ class Polynomial:
         # Si le terme constant (a_0) est nul, alors P(0) = 0.
         # Mathématiquement, on factorise par 't' : P(t) = t * Q(t).
         # On ajoute 0.0 aux solutions et on cherche les racines restantes dans Q(t).
-        if len(P.coefficients) > 1 and abs(P.coefficients[0]) < EPS:
+        if len(P.coefficients) > 1 and abs(P.coefficients[0]) < EPSILON:
             # On crée le polynôme quotient Q(t) en décalant les coefficients
             other_roots = Polynomial(P.coefficients[1:]).roots()
 
             # On combine 0.0 avec les autres racines en garantissant l'unicité
-            return unique_with_epsilon([0.0] + other_roots)
+            return unique_with_epsilon(other_roots)
 
         # --- CAS ANALYTIQUES (Optimisation pour les formes de base) ---
 
@@ -290,14 +290,14 @@ class Polynomial:
             b = P.coefficients[1]
             a = P.coefficients[2]
 
-            if abs(a) < EPS:
-                if abs(b) < EPS:
+            if abs(a) < EPSILON:
+                if abs(b) < EPSILON:
                     return []
                 return [-c / b]
 
             delta = b * b - 4 * a * c
 
-            if abs(delta) < EPS:
+            if abs(delta) < EPSILON:
                 t = -b / (2 * a)
                 return [t]
 
@@ -319,7 +319,7 @@ class Polynomial:
         # On convertit en base de Bernstein pour profiter de la propriété de
         # l'enveloppe convexe (élimination rapide des segments sans racines).
 
-        roots_near = solve(EPS, P.to_bernstein_basis(), 0, 1.0, [])
+        roots_near = solve(P.to_bernstein_basis(), 0, 1.0, [])
         solutions.extend(roots_near)
 
         # 2. Recherche sur l'intervalle lointain [1, +inf[
@@ -327,14 +327,16 @@ class Polynomial:
         # Les racines 'u' de P_reverse sur [0, 1] correspondent aux racines 't'
         # de P sur [1, +inf[ via la relation t = 1/u.
 
-        roots_far_inv = solve(EPS, P.reverse().to_bernstein_basis(), 0, 1.0, [])
+        roots_far_inv = solve(P.reverse().to_bernstein_basis(), 0, 1.0, [])
 
         roots_far = []
         for u in roots_far_inv:
-            if abs(u) > EPS:  # Évite la division par zéro (racine à l'infini)
+            if abs(u) > EPSILON:  # Évite la division par zéro (racine à l'infini)
                 t = 1.0 / u
 
-                if t > 1.0 + EPS:  # On ne garde que ce qui est strictement au-delà de 1
+                if (
+                    t > 1.0 + EPSILON
+                ):  # On ne garde que ce qui est strictement au-delà de 1
                     roots_far.append(t)
 
         solutions.extend(sorted(roots_far))
