@@ -131,7 +131,7 @@ class Number(DAG):
         try:
             return self._hash_cache
         except AttributeError:
-            # On utilise le Walrus operator pour la performance
+
             self._hash_cache = (h := hash((type(self), self.value)))
             return h
 
