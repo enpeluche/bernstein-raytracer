@@ -26,6 +26,15 @@ class Matrix:
         self.rows = len(self.mat)
         self.cols = len(self.mat[0])
 
+    @classmethod
+    def _fast_create(cls, tab: list[list[float]], rows: int, cols: int) -> "Matrix":
+        """Création ultra-rapide en interne (Bypass le __init__)"""
+        obj = cls.__new__(cls)  # Crée l'objet sans appeler __init__
+        obj.mat = tab
+        obj.rows = rows
+        obj.cols = cols
+        return obj
+
     def __getitem__(self, index: tuple[int, int]) -> float:
         """
         Args:
@@ -84,8 +93,6 @@ class Matrix:
                 f"Dimensions incompatibles: (c:{self.cols}) contre (r:{B.rows})"
             )
 
-        mul = [[0.0] * B.cols for _ in range(self.rows)]
-
         a = self.mat
         b = B.mat
 
@@ -112,10 +119,10 @@ class Matrix:
             c32 = a[3][0] * b[0][2] + a[3][1] * b[1][2] + a[3][2] * b[2][2] + a[3][3] * b[3][2]
             c33 = a[3][0] * b[0][3] + a[3][1] * b[1][3] + a[3][2] * b[2][3] + a[3][3] * b[3][3]
 
-            return Matrix([[c00,c01,c02,c03],
+            return Matrix._fast_create([[c00,c01,c02,c03],
                            [c10,c11,c12,c13],
                            [c20,c21,c22,c23],
-                           [c30,c31,c32,c33]])
+                           [c30,c31,c32,c33]], 4, 4)
         
         elif isinstance(B, Matrix) and B.cols == 1 and B.rows == 4:
             a = self.mat
@@ -126,16 +133,18 @@ class Matrix:
             z = a[2][0]*b[0][0] + a[2][1]*b[1][0] + a[2][2]*b[2][0] + a[2][3]*b[3][0]
             w = a[3][0]*b[0][0] + a[3][1]*b[1][0] + a[3][2]*b[2][0] + a[3][3]*b[3][0]
             
-            return Matrix([[x], [y], [z], [w]])
+            return Matrix._fast_create([[x], [y], [z], [w]], 4, 1)
 
         # fmt: on
+
+        mul = [[0.0] * B.cols for _ in range(self.rows)]
 
         for i in range(self.rows):
             for j in range(B.cols):
                 for k in range(self.cols):
                     mul[i][j] += a[i][k] * b[k][j]
 
-        return Matrix(mul)
+        return Matrix._fast_create(mul, self.rows, B.cols)
 
     def __matmul__(self, B: "Matrix") -> "Matrix":
         return self.__mul__(B)
@@ -146,13 +155,16 @@ class Matrix:
         )
 
     def to_tuple(self) -> tuple[float]:
-        """
-        Transforme uen matrice avec une seule colonne en un tuple.
-        """
         if self.cols != 1:
             raise ValueError(f"Le nombre de colonnes n'est pas égal à 1: c{self.cols}")
 
-        return tuple(self[i, 0] for i in range(self.rows))
+        # Chemin rapide pour les vecteurs 4D (ce qui arrive 99.9% du temps)
+        if self.rows == 4:
+            m = self.mat
+            return (m[0][0], m[1][0], m[2][0], m[3][0])
+
+        # Cas générique
+        return tuple(self.mat[i][0] for i in range(self.rows))
 
     def __str__(self):
         return "\n".join([str(row) for row in self.mat])
