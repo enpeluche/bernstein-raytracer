@@ -5,6 +5,11 @@ from math import sqrt, comb
 
 from constants import EPSILON
 
+from DAG import Number
+
+
+# vérifier que c'est int ou float pour roots et to_bernstein_basis
+
 
 def unique_with_epsilon(values):
     values = sorted(values)
@@ -17,6 +22,7 @@ def unique_with_epsilon(values):
 
 class Polynomial:
     __slots__ = ("coefficients", "len")
+    _mul_cache = {}
 
     """
     Représente un polynôme réel en base canonique (puissances de x).
@@ -40,18 +46,36 @@ class Polynomial:
         len (int): Le nombre de coefficients (degré + 1).
     """
 
-    def __init__(self, coefficients: tuple[float]) -> None:
+    def __init__(self, coefficients: tuple) -> None:
         """
         Create a Polynomial object (where c[0] is the constant term).
 
         Args:
-            c (tuple[float]): coefficients of polynomial in ascending order of power.
+            c (tuple): coefficients of polynomial in ascending order of power.
         """
 
-        coefficients = [float(x) for x in coefficients]
+        coefficients = list(coefficients)
 
-        while len(coefficients) > 1 and abs(coefficients[-1]) < EPS:
-            coefficients.pop()
+        while len(coefficients) > 1:
+            last = coefficients[-1]
+
+            # Cas A : Un nombre ou un flottant.
+            if isinstance(last, (int, float)):
+                if abs(last) < EPSILON:
+                    coefficients.pop()
+                else:
+                    break
+
+            # Cas B : Un Number
+            elif isinstance(last, Number):
+                if abs(last.value) < EPSILON:
+                    coefficients.pop()
+                else:
+                    break
+
+            # Cas C : Autre
+            else:
+                break
 
         self.coefficients = tuple(coefficients)
 
@@ -71,7 +95,7 @@ class Polynomial:
         """
         return self.coefficients
 
-    def __call__(self, x: float) -> float:
+    def __call__(self, x):
         """
         Évalue le polynôme pour une valeur réelle donnée via la méthode de Horner.
 
@@ -85,10 +109,10 @@ class Polynomial:
         - Efficacité : seulement $n$ multiplications et $n$ additions.
 
         Args:
-            x (float): La valeur (souvent le paramètre de distance $t$) à évaluer.
+            x : La valeur (souvent le paramètre de distance $t$) à évaluer.
 
         Returns:
-            float: Le résultat de l'évaluation $P(x)$.
+            Le résultat de l'évaluation $P(x)$.
         """
 
         n = self.len
@@ -154,6 +178,15 @@ class Polynomial:
         Returns:
             Polynomial: Un nouveau polynôme représentant le produit.
         """
+        if Q is POLY_ONE:
+            return self
+        if Q is POLY_ZERO:
+            return POLY_ZERO
+
+        key = (id(self), id(Q))
+
+        if key in Polynomial._mul_cache:
+            return Polynomial._mul_cache[key]
 
         len_self = self.len
         len_Q = Q.len
@@ -163,11 +196,16 @@ class Polynomial:
         for i in range(len_self):
             c1 = self.coefficients[i]
 
-            if c1 == 0:
+            if isinstance(c1, (int, float)) and c1 == 0:
+                continue
+
+            if isinstance(c1, Number) and c1.value == 0:
                 continue
 
             for j in range(len_Q):
                 mul_coeffs[i + j] += c1 * Q.coefficients[j]
+
+        Polynomial._mul_cache[key] = Polynomial(mul_coeffs)
 
         return Polynomial(mul_coeffs)
 
@@ -375,5 +413,8 @@ class Polynomial:
         return pol
 
     def __str__(self):
+        return f"Polynomial([{', '.join(str(c) for c in self.coefficients)}])"
 
-        return f"Polynomial({self.coefficients})"
+
+POLY_ZERO = Polynomial([0.0])
+POLY_ONE = Polynomial([1.0])
