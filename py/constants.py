@@ -1,5 +1,5 @@
 # --- Mathématiques ---
-PI = 3, 141592653589793
+PI = 3.1415926535
 DEG = PI / 180.0
 
 # --- Paramètres de Rendu ---
@@ -10,6 +10,8 @@ SHADOW_BIAS = 0.001
 SHADOW_OPACITY = 0.5
 AMBIENT_LIGHT = 0.1
 
+RENDER_SIZE = 750
+
 # --- Palette de Couleurs (RGB) ---
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -19,3 +21,9 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 CYAN = (0, 255, 255)
 MAGENTA = (255, 0, 255)
+
+
+UP = (0.0, 0.0, 1.0)
+
+
+EPSILON = 1e-9
