@@ -15,8 +15,8 @@ class AABB:
         bounds_start_i < bounds_end_i pour tout i.
 
         Args:
-            p1 (tuple[float, float, float]): La coordonnée de début de la AABB.
-            p2 (tuple[float, float, float]): La coordonnée de fin de la AABB.
+            bounds_start (tuple[float, float, float]): La coordonnée de début de la AABB.
+            bounds_end (tuple[float, float, float]): La coordonnée de fin de la AABB.
         """
 
         self.bounds_start = (min(p1[0], p2[0]), min(p1[1], p2[1]), min(p1[2], p2[2]))
