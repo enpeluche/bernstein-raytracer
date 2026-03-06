@@ -37,10 +37,12 @@ class DAG:
         Returns:
             DAG: A simplified Opp node.
         """
+        from .mult import Mult
+        from .number import MINUS_ONE
 
-        from .opp import Opp
-
-        return Opp.make(self)
+        return Mult.make(MINUS_ONE, self)
+        # from .opp import Opp
+        # return Opp.make(self)
 
     def __add__(self, b) -> "DAG":
         """
