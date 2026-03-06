@@ -188,10 +188,13 @@ class Pow(DAG):
         return result
 
     def __str__(self) -> str:
-        """
-        Return the string representation of the exponentiation.
+        from .plus import Plus
+        from .mult import Mult
 
-        Returns:
-            str: The expression in 'base**exponent' format.
-        """
-        return f"{self.base}**{self.exp}"
+        # On protège la base si c'est un Plus ou un Mult
+        if isinstance(self.base, (Plus, Mult)):
+            base_str = f"({self.base})"
+        else:
+            base_str = str(self.base)
+
+        return f"{base_str}**{self.exp}"

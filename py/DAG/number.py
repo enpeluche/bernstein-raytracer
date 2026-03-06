@@ -136,5 +136,6 @@ class Number(DAG):
             return h
 
 
+MINUS_ONE = Number.make(-1.0)
 ZERO = Number.make(0.0)
 ONE = Number.make(1.0)
