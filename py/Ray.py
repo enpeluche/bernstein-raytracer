@@ -16,6 +16,7 @@ class Ray:
     __slots__ = (
         "origin",
         "direction",
+        "inverse_direction",
         "norm_squared_origin",
         "norm_squared_direction",
         "dot",
@@ -34,6 +35,13 @@ class Ray:
         """
         self.origin = origin
         self.direction = normalize3(direction)
+
+        dx, dy, dz = self.direction
+        self.inverse_direction = (
+            1.0 / dx if dx != 0 else float("inf"),
+            1.0 / dy if dy != 0 else float("inf"),
+            1.0 / dz if dz != 0 else float("inf"),
+        )
 
         self.norm_squared_origin = dot3(origin, origin)
         self.norm_squared_direction = 1.0  # la direction est normalisée
@@ -61,15 +69,15 @@ class Ray:
 
         return self.env
 
-    def _transform(self, T: Transformation) -> "Ray":
+    def _transform(self, transformation: Transformation) -> "Ray":
         """
         Transform the ray into a new coordinate system using a given matrix.
 
         Args:
-            T (Transformation): A homogeneous transformation matrix.
+            transformation (Transformation): A homogeneous transformation matrix.
 
         Returns:
-            Ray: A new ray instance with its origin and direction transformed by T.
+            Ray: A new ray instance with its origin and direction transformed by transformation.
         """
 
         sx, sy, sz = self.origin
@@ -82,7 +90,7 @@ class Ray:
         # w=0 car la direction est un vecteur (non affecté par la translation)
         direction_mat = Matrix._fast_create([[dx], [dy], [dz], [0]], 4, 1)
 
-        M = T.forward
+        M = transformation.forward
 
         transformed_origin_mat = M * origin_mat
         transformed_direction_mat = M * direction_mat
@@ -92,12 +100,12 @@ class Ray:
             transformed_direction_mat.to_tuple()[:3],
         )
 
-    def transform(self, T: Transformation) -> "Ray":
+    def transform(self, transformation: Transformation) -> "Ray":
 
         ox, oy, oz = self.origin
         dx, dy, dz = self.direction
 
-        M = T.forward
+        M = transformation.forward
 
         # accès direct
         m = M.mat
