@@ -5,4 +5,3 @@ from .plus import Plus
 from .mult import Mult
 from .opp import Opp
 from .pow import Pow
-from .standard import *
