@@ -256,7 +256,7 @@ def topo_sort_multiple(roots):
     return order
 
 
-def generate_python_poly_function(roots):
+def generate_python_poly_function(roots, is_spatial):
 
     # union des DAGs
     all_nodes = set()
@@ -266,9 +266,12 @@ def generate_python_poly_function(roots):
     nodes = topo_sort_multiple(roots)  # ou un topo_sort sur le DAG fusionné
     index = {node: i for i, node in enumerate(nodes)}
 
-    vars_needed = sorted(set(n.name for n in nodes if isinstance(n, Variable)))
-    vars_needed.append("**env")
-    args_str = ", ".join(vars_needed)
+    if is_spatial:
+        args_str = "x, y, z, **env"
+    else:
+        vars_needed = sorted(set(n.name for n in nodes if isinstance(n, Variable)))
+        vars_needed.append("**env")
+        args_str = ", ".join(vars_needed)
 
     lines = [f"def compiled_poly({args_str}):"]
     indent = "    "
@@ -310,3 +313,76 @@ def generate_python_poly_function(roots):
     exec(code, namespace)
 
     return namespace["compiled_poly"], code
+
+
+def analyze_primitive_compiler(implicit_function, surface_name, env):
+    """
+    Exécute une suite complète d'analyses et de logs pour une surface implicite
+    pendant la phase de compilation JIT.
+    """
+    print("=" * 80)
+    print(f"COMPILER SUITE: ANALYZING {surface_name}")
+    print("=" * 80)
+
+    # PHASE 1 : Géométrie Symbolique
+    print(f"\n[ PHASE 1 ] SYMBOLIC GEOMETRY")
+    print(f"  • Implicit Equation : f(x, y, z) = {implicit_function}")
+
+    dfx = implicit_function.partial_derivative("x")
+    dfy = implicit_function.partial_derivative("y")
+    dfz = implicit_function.partial_derivative("z")
+
+    print(f"  • Gradient ∇f (Normal vectors) :")
+    print(f"    ∂f/∂x : {dfx}")
+    print(f"    ∂f/∂y : {dfy}")
+    print(f"    ∂f/∂z : {dfz}")
+
+    # PHASE 2 : Paramétrisation du Rayon
+    print(f"\n[ PHASE 2 ] RAY PARAMETERIZATION")
+    print(f"  Substituting: P(t) = O + tD")
+    print(f"  (x, y, z) ➔ (ox + t*dx, oy + t*dy, oz + t*dz)")
+
+    # Conversion en polynôme de t selon l'environnement défini dans primitive.py
+    poly = implicit_function.to_polynomial(env)  #
+    print(f"\n  Resulting Polynomial P(t) coefficients (Raw):")
+    for i, coeff in enumerate(poly.coefficients):
+        print(f"    t^{i} : {coeff}")
+
+    # PHASE 3 : Optimisation Symbolique
+    print(f"\n[ PHASE 3 ] SYMBOLIC OPTIMIZATION")
+    print(f"  Searching for Vector Patterns: O2 (Origin²), D2 (Dir²), OD (Dot Product)")
+
+    optimized_coeffs = [optimize_patterns(c) for c in poly.coefficients]  #
+    for i, opt in enumerate(optimized_coeffs):
+        print(f"    t^{i} : {opt}")
+
+    # PHASE 4 : Compilation JIT
+    print(f"\n[ PHASE 4 ] JIT COMPILATION : OPTIMIZED PYTHON CODE")
+    print(f"  Generating kernel functions for real-time evaluation...")
+
+    for i, opt in enumerate(optimized_coeffs):
+        # Utilisation de ta fonction de génération de code
+        _, code = generate_python_poly_function([opt], False)  #
+        print(f"\n--- Kernel for t^{i} ---")
+        indented_code = "    " + code.replace("\n", "\n    ")
+        print(indented_code)
+
+    # ANALYSE DE COMPLEXITÉ DU DAG
+    print(f"\n" + "=" * 80)
+    print(f"DAG COMPLEXITY ANALYSIS")
+    print("=" * 80)
+
+    # Tri topologique pour analyser le graphe d'exécution
+    from DAG.compiler import topo_sort  #
+
+    order = topo_sort(implicit_function)
+    print(f"  • Total unique operations in DAG : {len(order)}")
+    print(f"  • Execution flow (Leaves to Root) :")
+
+    for i, node in enumerate(order[:15]):
+        print(f"    {i:03d} | {node}")
+    if len(order) > 15:
+        print(f"    ... and {len(order)-15} more operations.")
+
+    print(f"\n[ SUCCESS ] Primitive '{surface_name}' is ready for the renderer.")
+    print("=" * 80 + "\n")

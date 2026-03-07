@@ -142,3 +142,6 @@ class Variable(DAG):
         except AttributeError:
             self._hash_cache = (h := hash((type(self), self.name)))
             return h
+
+
+x, y, z = Variable.make("x"), Variable.make("y"), Variable.make("z")
