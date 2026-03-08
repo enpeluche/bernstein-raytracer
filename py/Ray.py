@@ -1,6 +1,6 @@
-from Matrix import Matrix
 from transformation import Transformation
 from util import normalize3, dot3
+from constants import EPSILON
 
 
 class Ray:
@@ -20,11 +20,18 @@ class Ray:
         "norm_squared_origin",
         "norm_squared_direction",
         "dot",
-        "env",
+        "eval_params",
+        "t_min",
+        "t_max",
     )
 
     def __init__(
-        self, origin: tuple[float, float, float], direction: tuple[float, float, float]
+        self,
+        origin: tuple[float, float, float],
+        direction: tuple[float, float, float],
+        should_normalize: bool = True,
+        t_min: float = EPSILON,
+        t_max: float = float("inf"),
     ) -> None:
         """
         Initialize a new ray.
@@ -32,9 +39,21 @@ class Ray:
         Args:
             origin (tuple[float, float, float]): The ray's starting point (origin).
             direction (tuple[float, float, float]): The ray's direction vector.
+            should_normalize (bool): If True, normalizes the direction vector
+            t_min (float): The minimum valid intersection distance. Used to prevent self-intersection artifacts (shadow acne).
+            t_max (float): The maximum valid intersection distance. Used to limit the ray's reach (e.g., stopping at a light source).
         """
+        self.t_min = t_min
+        self.t_max = t_max
+
         self.origin = origin
-        self.direction = normalize3(direction)
+
+        if should_normalize:
+            self.direction = normalize3(direction)
+            self.norm_squared_direction = 1.0
+        else:
+            self.direction = direction
+            self.norm_squared_direction = dot3(direction, direction)
 
         dx, dy, dz = self.direction
         self.inverse_direction = (
@@ -44,32 +63,22 @@ class Ray:
         )
 
         self.norm_squared_origin = dot3(origin, origin)
-        self.norm_squared_direction = 1.0  # la direction est normalisée
+
         self.dot = dot3(origin, self.direction)
 
-        self.env = {
-            "ox": origin[0],
-            "oy": origin[1],
-            "oz": origin[2],
-            "dx": self.direction[0],
-            "dy": self.direction[1],
-            "dz": self.direction[2],
-            "O2": self.norm_squared_origin,
-            "D2": self.norm_squared_direction,
-            "OD": self.dot,
-        }
+        self.eval_params = (
+            origin[0],
+            origin[1],
+            origin[2],
+            self.direction[0],
+            self.direction[1],
+            self.direction[2],
+            self.norm_squared_origin,
+            self.norm_squared_direction,
+            self.dot,
+        )
 
-    def get_env(self) -> dict[str, float]:
-        """
-        Return the numerical environment mapping for the DAG evaluator.
-
-        This mapping provides the actual float values for the ray's origin and
-        direction components (e.g., 'ox', 'dx', etc.).
-        """
-
-        return self.env
-
-    def _transform(self, transformation: Transformation) -> "Ray":
+    def transform(self, transformation: Transformation) -> "Ray":
         """
         Transform the ray into a new coordinate system using a given matrix.
 
@@ -80,44 +89,25 @@ class Ray:
             Ray: A new ray instance with its origin and direction transformed by transformation.
         """
 
-        sx, sy, sz = self.origin
-
-        # w=1 car l'origine est un point (affecté par la translation)
-        origin_mat = Matrix._fast_create([[sx], [sy], [sz], [1]], 4, 1)
-
-        dx, dy, dz = self.direction
-
-        # w=0 car la direction est un vecteur (non affecté par la translation)
-        direction_mat = Matrix._fast_create([[dx], [dy], [dz], [0]], 4, 1)
-
-        M = transformation.forward
-
-        transformed_origin_mat = M * origin_mat
-        transformed_direction_mat = M * direction_mat
-
-        return Ray(
-            transformed_origin_mat.to_tuple()[:3],
-            transformed_direction_mat.to_tuple()[:3],
-        )
-
-    def transform(self, transformation: Transformation) -> "Ray":
-
         ox, oy, oz = self.origin
         dx, dy, dz = self.direction
 
-        M = transformation.forward
+        m = transformation.forward.mat
 
-        # accès direct
-        m = M.mat
-
-        # origine
+        # transformed origin
         ox2 = m[0][0] * ox + m[0][1] * oy + m[0][2] * oz + m[0][3]
         oy2 = m[1][0] * ox + m[1][1] * oy + m[1][2] * oz + m[1][3]
         oz2 = m[2][0] * ox + m[2][1] * oy + m[2][2] * oz + m[2][3]
 
-        # direction
+        # transformed direction
         dx2 = m[0][0] * dx + m[0][1] * dy + m[0][2] * dz
         dy2 = m[1][0] * dx + m[1][1] * dy + m[1][2] * dz
         dz2 = m[2][0] * dx + m[2][1] * dy + m[2][2] * dz
 
-        return Ray((ox2, oy2, oz2), (dx2, dy2, dz2))
+        return Ray(
+            origin=(ox2, oy2, oz2),
+            direction=(dx2, dy2, dz2),
+            should_normalize=False,
+            t_min=self.t_min,
+            t_max=self.t_max,
+        )
