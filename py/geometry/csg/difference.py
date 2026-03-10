@@ -12,8 +12,21 @@ class Difference(CSGNode):
 
         self.aabb = left.aabb - right.aabb
 
-    def intersection(self, ray):
+    def _intersection(self, ray):
         if not self.aabb.intersection(ray):
             return []
 
         return differ(self.left.intersection(ray), self.right.intersection(ray))
+
+    def intersection(self, ray):
+        if not self.aabb.intersection(ray):
+            return []
+
+        left_intervals = self.left.intersection(ray)
+        right_intervals = self.right.intersection(ray)
+
+        for interval in right_intervals:
+            interval.hit_in.invert()
+            interval.hit_out.invert()
+
+        return differ(left_intervals, right_intervals)
