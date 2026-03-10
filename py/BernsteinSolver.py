@@ -13,6 +13,8 @@ def solve(
     tab: list[float],
     t1: float,
     t2: float,
+    v_min: float,
+    v_max: float,
     solutions: list[float],
     depth: int = 0,
 ) -> list[float]:
@@ -30,6 +32,9 @@ def solve(
     Returns:
         list[float]: La liste mise à jour des racines trouvées.
     """
+    # Si le segment [t1, t2] est hors de la zone utile, on jette !
+    if t2 < v_min or t1 > v_max:
+        return solutions
 
     # 1. Sécurité : Limite de récursion (évite de bloquer sur les racines tangentes)
     if depth > 20:
@@ -52,7 +57,46 @@ def solve(
 
     tm = (t1 + t2) * 0.5
 
-    solve(tab1, t1, tm, solutions, depth + 1)
-    solve(tab2, tm, t2, solutions, depth + 1)
+    solve(tab1, t1, tm, v_min, v_max, solutions, depth + 1)
+    solve(tab2, tm, t2, v_min, v_max, solutions, depth + 1)
 
     return solutions
+
+
+def has_root(
+    tab: list[float],
+    t1: float,
+    t2: float,
+    v_min: float,
+    v_max: float,
+    depth: int = 0,
+) -> bool:
+    """Variante ultra-rapide : s'arrête au premier signe de racine."""
+
+    # 1. Hors limites ? On jette.
+    if t2 < v_min or t1 > v_max:
+        return False
+
+    # 2. Racine trouvée par limite de profondeur ? BINGO.
+    if depth > 20:
+        return True
+
+    # 3. Enveloppe convexe : pas de zéro croisé ? On jette.
+    if min(tab) > 0.0 or max(tab) < 0.0:
+        return False
+
+    # 4. Racine trouvée par précision ? BINGO.
+    dt = t2 - t1
+    if dt < EPSILON:
+        return True
+
+    # 5. Subdivision
+    tab1, tab2 = Casteljau(tab)
+    tm = (t1 + t2) * 0.5
+
+    # L'ARMEMENT DU SNIPER : Si la branche gauche trouve une racine,
+    # Python ne calculera JAMAIS la branche droite (has_root(tab2...)).
+    if has_root(tab1, t1, tm, v_min, v_max, depth + 1):
+        return True
+
+    return has_root(tab2, tm, t2, v_min, v_max, depth + 1)
