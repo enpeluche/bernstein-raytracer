@@ -1,6 +1,44 @@
-# Surfaces
+# Bernstein-Ray: Symbolic Raytracer for Algebraic Implicit Surfaces
 
-Ici commencer par roman qui tourne, tore qui tourne
+<div align="center">
+  <table style="margin-left: auto; margin-right: auto;">
+    <tr>
+      <td align="center">
+        <img src="gallery/0001.png" width="200"><br>
+        <sub><b>Type:</b> Roman Surface (Z-axis rotation)<br><b>Camera:</b> Perspective</sub>
+      </td>
+    </tr>
+  </table>
+  
+</div>
+
+Bernstein-Ray is a research-oriented raytracer designed for rendering **algebraic implicit surfaces** defined by polynomial equations.
+
+Instead of relying on numerical ray marching, the engine computes **exact ray–surface intersections** by transforming the implicit equation into a **univariate polynomial along the ray**, then solving it using **Bernstein basis subdivision (de Casteljau algorithm)**.
+
+This approach allows robust rendering of complex algebraic surfaces such as:
+
+- Steiner surfaces
+- Roman surfaces
+- Torii
+- Taubin hearts
+- Quartic algebraic surfaces
+
+
+## Key Features
+
+- Symbolic construction of ray–surface intersection polynomials
+- Root isolation using Bernstein basis subdivision
+- Support for arbitrary algebraic implicit surfaces
+- Constructive Solid Geometry (CSG)
+- Multiple camera models:
+  - Perspective
+  - Orthographic
+  - Fisheye
+  - Thin lens (depth of field)
+  - Cylindrical
+- Automatic transformation of rays into object space
+
 <div align="center">
   <table style="margin-left: auto; margin-right: auto;">
     <tr>
@@ -13,9 +51,9 @@ Ici commencer par roman qui tourne, tore qui tourne
   
 </div>
 
-## La galerie des surfaces implicites
+## Implicit Surfaces Gallery
 
-### Surfaces algébriques de degré 2 : Les quadriques
+### Degree 2 Algebraic Surfaces: Quadrics
 
 <div align="center">
   <table style="margin-left: auto; margin-right: auto;">
@@ -49,7 +87,7 @@ Ici commencer par roman qui tourne, tore qui tourne
 </div>
 
 
-### Surfaces algébriques de degré 4
+### Degree 4 Algebraic Surfaces: Quartics
 
 <div align="center">
   <table style="margin-left: auto; margin-right: auto;">
@@ -70,7 +108,7 @@ Ici commencer par roman qui tourne, tore qui tourne
   </table>
 </div>
 
-## Un peu de CSG
+## A Glimpse into CSG (Constructive Solid Geometry)
 
 <div align="center">
   <table style="margin-left: auto; margin-right: auto;">
@@ -83,120 +121,97 @@ Ici commencer par roman qui tourne, tore qui tourne
   </table>
 </div>
 
+## Tutorial: Implement Your Own Custom Surface
 
-Sauf-ci mention contraire, nous travaillons dans l'espace vectoriel normé $\R^3$, muni du produit scalaire usuel, par exemple, on ne précisera pas que le point $c=(c_x, c_y, c_z)$ est un triplet de réel.
+Want to render a surface that isn't in the library yet? Adding a new algebraic shape is as simple as defining its equation.
 
-## Les fonctions utilitaires (util.py)
+### Step 1: Find the Implicit Equation
 
-### -> normalise3
+Identify the equation where f(x,y,z)=0. For the Ding-Dong surface, the equation is:
 
-Pour un vecteur $v=(v_x, v_y, v_z)$, on a $ \|v\| = \sqrt{v_x^2 + v_y^2 + v_z^2}$, ainsi on peut créer le vecteur de norme $1$ :
-$$n := \frac{v}{\|v\|} = \left(\frac{v_x}{\|v\|}, \frac{v_y}{\|v\|}, \frac{v_z}{\|v\|}\right)$$
-Ce calcul est disponible via la fonction **normalise3**.
+x2+y2=(1−z)z2⟹x2+y2−(1−z)z2=0
 
-### -> clamp
+Degree: 3 (Cubic)
 
-"To clamp" signifie verouiller, si $x \in \R$, on peut forcer $x$ à appartenir à l'intervalle $[m, M]$.
+Domain Analysis: For the surface to exist (x2+y2≥0), we need (1−z)≥0, meaning z∈[−∞,1].
 
-$$clamp_{m, M}(x) := min(M, max(m, x))$$
 
-Autrement dit, on a
+Step 2: Define the Primitive
 
-$$
-\text{clamp}_{m, M}(x) =
-\begin{cases}
-m & \text{si } x < m \\
-x & \text{si } m \le x \le M \\
-M & \text{si } x > M
-\end{cases}
-$$
+Add the following function to py/shapes/cubics.py.
 
-### -> interpole
+    Note on AABB: Providing an Axis-Aligned Bounding Box (AABB) is optional but highly recommended. It significantly speeds up rendering by telling the raytracer exactly where to look for the surface.
 
-Admettons que l'on se balade sur un segment $[x_1, x_2]$, notons $x \in [x_1, x_2]$.
 
-Si le segment maintenant se modifiait et devenait $[y_1, y_2]$, où se trouverait la nouvelle image de $x$ ?
+on doit avoir (1-z) z^2 > 0 donc 1-z >0 donc z in -infini, 1
 
-Le problème peut se résumer par trouver un polynôme de degré minimal tel que $f(x1) = y1$ et $f(x2) = y2$, ainsi on pourrait calculer $f(x)$.
+on peut donc englober d'une AABB
 
-On se donne deux point $(x_0 y_0)$ et $(x_1, y_1)$ avec $x_0 \neq x_1$. On peut alors utiliser l 'interpolation de Lagrange (les hypothèses sont respectées), qui donnerait un unique polynôme de degré minimale, c'est-à-dire une droite, passant par ces deux points.
+-infini, -infini, -infini
+infini, infini, 1
 
-Le polynôme est le suivant :
+```
+def dingdong(color=None, **kwargs) -> Primitive:
+    # Define the symbolic expression
+    expr = x**2 + y**2 - (1 - z) * z**2
 
-$$L(x) = y_1\frac{x-x_0}{x_1-x_0} + y_0\frac{x-x_1}{x_0-x_1}$$
+    # Define the bounding box (Min_X, Min_Y, Min_Z, Max_X, Max_Y, Max_Z)
+    # Even if Z goes to -infinity, we bound it for the render view.
+    aabb = (-1.5, -1.5, -1.0, 1.5, 1.5, 1.0)
 
-## Le rayon
+    return Primitive(
+        implicit_function=expr, 
+        color=color, 
+        label="Ding-Dong", 
+        aabb=aabb, 
+        **kwargs
+    )
+```
 
-Un rayon de source $s=(s_x, s_y, s_z)$ et de direction $d=(d_x, d_y, d_z)$ est défini par une équation paramétrique de la forme :
-$$R_{s, d}(t) = (s_x + d_x \cdot t, s_y + d_y \cdot t, s_z + d_z \cdot t), \quad t \in \R$$
 
-Le rayon sera modélisé par la classe Ray (fichier Ray.py) qui aura deux attributs: **origin** et **direction**, qui seront des points de $\R^3$.
+Step 3: Register the Surface
 
-## La caméra
+To make it accessible, update the __init__.py or the import section of your main script:
 
-Comment fonctionne le raytracing ?
 
-Imaginons que l'on regarde ce qu'il se passe à travers une caméra. Cette caméra servira de pont entre ce que nous voyons à l'écran et ce qu'il se passe dans le monde mathématique.
+from .cubics import cayley, whitney_umbrella
 
-La camera sera modélisée par la classe Camera disponible dans Cameras.py
+devient
 
-Elle possède les attributs suivants:
+from .cubics import cayley, whitney_umbrella, dingdong
 
-- (elle possède une taille d'écran)
-- (elle possède une taille de monde).
-- Cette caméra a une position,
-- elle regarde dans une direction.
-- Elle possède un nom et sur la scène,
-- on peut imaginer une source de lumière (afin de plus tard simuler des ombres).
+Step 4: Render!
 
-Comment capte elle la lumière ? On va lui faire une méthode generate_ray. Là on a deux écoles :
+Now you can use it in your scene just like any other shape:
 
-Soit on fixe l'origine à l'origine de la caméra et on fait varier les rayons (qui donnera la classe Camera)
 
-    world_x = interpole(0.0, 0.0, self.size_win, self.size_world, float(px))
-        world_z = interpole(0.0, 0.0, self.size_win, self.size_world, float(pz))
 
-        (cam_ox, cam_oy, cam_oz) = self.cam_o
+shape = dingdong(color=RED).rotate_x(DEG * 90)
 
-return Ray(
-origin=(
-cam*ox + world_x * self.cam*dx[0] + world_z * self.cam*dz[0],
-cam_oy + world_x * self.cam*dx[1] + world_z * self.cam*dz[1],
-cam_oz + world_x * self.cam*dx[2] + world_z * self.cam_dz[2],
-),
-direction=self.oy,
-)
+# How it works
+## Ray–Surface Intersection
 
-soit on fixe la direction (direction oy de la caméra) et on déplace l'origine (qui donnera la classe camera perspective)
-world_x = interpole(0.0, 0.0, self.size_win, self.size_world, float(px))
-world_z = interpole(0.0, 0.0, self.size_win, self.size_world, float(pz))
+Given an implicit surface
 
-        dx = (
-            self.focale * self.cam_dy[0]
-            + world_x * self.cam_dx[0]
-            + world_z * self.cam_dz[0]
-        )
-        dy = (
-            self.focale * self.cam_dy[1]
-            + world_x * self.cam_dx[1]
-            + world_z * self.cam_dz[1]
-        )
-        dz = (
-            self.focale * self.cam_dy[2]
-            + world_x * self.cam_dx[2]
-            + world_z * self.cam_dz[2]
-        )
+f(x,y,z) = 0
 
-        return Ray(origin=self.cam_o, direction=normalize3((dx, dy, dz)))
+and a ray
 
-def **init**(
-self, cam_o, cam_dx, cam_dy, cam_dz, size_world, size_win, light_dir, name
-):
+r(t) = o + t d
 
-## La sphère
+we substitute the ray equation into the surface:
 
-La sphère de centre $c=(c_x, c_y, c_z)$ et de rayon $r \in \R$ est définit par l'équation
-$$(x-c_x)^2+(y-c_y)^2+(z-c_z)^2-r^2=0$$
+g(t) = f(o + t d)
 
-$$
-$$
+For algebraic surfaces this produces a **polynomial in t**.
+
+Example:
+
+Torus → degree 4 polynomial  
+Taubin heart → degree 6 polynomial
+
+The roots of g(t) correspond to ray–surface intersections.
+
+Bernstein-Ray isolates roots using **Bernstein polynomial subdivision**
+based on the **de Casteljau algorithm**, which provides robust root finding
+without requiring explicit polynomial solving.
