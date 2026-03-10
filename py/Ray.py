@@ -31,7 +31,7 @@ class Ray:
         direction: tuple[float, float, float],
         should_normalize: bool = True,
         t_min: float = EPSILON,
-        t_max: float = float("inf"),
+        t_max: float = 20.0,  # float("inf"),
     ) -> None:
         """
         Initialize a new ray.

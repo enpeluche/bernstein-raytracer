@@ -1,64 +1,82 @@
-from util import normalize3
-
-
 class RayHit:
     """
-    Contient toutes les informations géométriques et visuelles d'un point d'impact
-    entre un rayon et une surface géométrique.
+    Store geometric and visual attributes of a ray-surface intersection.
+
+    This class serves as a data container for all properties derived during
+    the intersection process, facilitating coordinate transformations and
+    shading calculations between local and parent spaces.
     """
 
     __slots__ = (
-        "t",
-        "pt",
-        "local_pt",
-        "plan",
-        "color",
-        "apply_face_color",
-        "apply_grid_pattern",
+        "primitive",
+        "impact_time",
+        "local_impact_point",
+        "world_impact_point",
+        "local_normal",
+        "world_normal",
+        "is_front_face",
     )
 
     def __init__(
         self,
-        t: float,
-        pt: tuple[float, float, float],
-        local_pt: tuple[float, float],
-        plan: tuple[float, float, float, float],
-        color: tuple[int, int, int],
-        apply_face_color: bool,
-        apply_grid_pattern: bool,
+        primitive,
+        impact_time: float,
+        local_impact_point: tuple[float, float, float],
+        world_impact_point: tuple[float, float, float],
+        local_normal: tuple[float, float, float],
+        world_normal: tuple[float, float, float],
+        is_front_face: bool,
     ) -> None:
-        """
-        Initialise un nouveau point d'impact.
+        """Initialize a new ray-surface intersection record.
 
         Args:
-            t (float): Moment t de l'impact (distance le long du rayon).
-            pt (tuple[float, float, float]): Coordonnées 3D globales de l'impact (x, y, z).
-            local_pt (tuple[float, float]): Point d'impact en coordonnées locales UV (u, v).
-            plan (tuple[float, float, float, float]): Plan tangent à l'impact (nx, ny, nz, d).
-            color (tuple[int, int, int]): Couleur RGB du point d'impact.
-            apply_face_color (bool): Indique si on doit appliquer la couleur de la face.
-            apply_grid_pattern (bool): Indique si on doit appliquer la texture procédurale quadrillée.
+            primitive (Primitive): The geometric object intersected by the ray.
+            impact_time (float): The distance along the ray to the hit point ($t$).
+            local_impact_point (tuple[float, float, float]): The 3D coordinates of the impact in the object's local coordinate system.
+            world_impact_point (tuple[float, float, float]): The 3D coordinates of the impact in the parent or world coordinate system.
+            local_normal (tuple[float, float, float]): The surface normal vector at the impact point in local coordinates.
+            world_normal (tuple[float, float, float]): The surface normal vector at the impact point in parent or world coordinates.
+            is_front_face (bool): True if the ray hit the surface from the outside, False if it hit the interior face.
         """
+        self.primitive = primitive
+        self.impact_time = impact_time
+        self.local_impact_point = local_impact_point
+        self.world_impact_point = world_impact_point
+        self.local_normal = local_normal
+        self.world_normal = world_normal
+        self.is_front_face = is_front_face
 
-        self.t = t
-        self.pt = pt
-        self.local_pt = local_pt
+    def invert(self) -> None:
+        """Inverse la normale et l'orientation de la face (utile pour la CSG)."""
+        # Inversion des vecteurs
+        self.local_normal = (
+            -self.local_normal[0],
+            -self.local_normal[1],
+            -self.local_normal[2],
+        )
+        self.world_normal = (
+            -self.world_normal[0],
+            -self.world_normal[1],
+            -self.world_normal[2],
+        )
 
-        nx, ny, nz, d = plan
-        nx, ny, nz = normalize3((nx, ny, nz))
-        self.plan = (nx, ny, nz, d)
-        px, py, pz = pt
-        d = -(nx * px + ny * py + nz * pz)
+        # Une face avant devient une face arrière et vice-versa
+        self.is_front_face = not self.is_front_face
 
-        self.color = color
-        self.apply_face_color = apply_face_color
-        self.apply_grid_pattern = apply_grid_pattern
+    def __repr__(self) -> str:
+        """Return a formatted string representation for debugging.
 
-    def __repr__(self):
-        """Représentation textuelle de l'impact pour le débogage."""
+        Returns:
+            str: A concise summary of the hit including face orientation,
+                impact time, parent coordinates, and normal vector.
+        """
+        face = "Front" if self.is_front_face else "Back"
+        px, py, pz = self.world_impact_point
+        nx, ny, nz = self.world_normal
+
         return (
-            f"RayHit(t={self.t:.3f}, "
-            f"pt=({self.pt[0]:.3f}, {self.pt[1]:.3f}, {self.pt[2]:.3f}), "
-            f"plan=({self.plan[0]:.3f}, {self.plan[1]:.3f}, {self.plan[2]:.3f}), "
-            f"color={self.color})"
+            f"RayHit(face={face}, time={self.impact_time:.3f}, "
+            f"pos=({px:.3f}, {py:.3f}, {pz:.3f}), "
+            f"norm=({nx:.3f}, {ny:.3f}, {nz:.3f}), "
+            f"color={self.primitive.color})"
         )
