@@ -3,32 +3,41 @@ from DAG import x, y, z
 from geometry import AABB
 
 
-def steiner2(color=None, **kwargs):
+def steiner2(color=None, **kwargs) -> Primitive:
 
-    expr = x ** 2 * y ** 2 - x ** 2 * z ** 2 + y ** 2 * z ** 2 - x * y * z
+    return Primitive(
+        implicit_function=x ** 2 * y ** 2
+        - x ** 2 * z ** 2
+        + y ** 2 * z ** 2
+        - x * y * z,
+        color=color,
+        label="steiner2",
+        **kwargs
+    )
 
-    return Primitive(implicit_function=expr, color=color, label="steiner2", **kwargs)
 
+def steiner4(color=None, **kwargs) -> Primitive:
 
-def steiner4(color=None, **kwargs):
-    expr = (
-        y ** 2
+    return Primitive(
+        implicit_function=y ** 2
         - 2.0 * x * y ** 2
         - x * z ** 2
         + x ** 2 * y ** 2
         + x ** 2 * z ** 2
-        - z ** 4
+        - z ** 4,
+        color=color,
+        label="steiner4",
+        **kwargs
     )
 
-    return Primitive(implicit_function=expr, color=color, label="steiner4", **kwargs)
 
-
-def roman(color=None, **kwargs):
-
-    expr = x ** 2 * y ** 2 + x ** 2 * z ** 2 + y ** 2 * z ** 2 - 2.0 * x * y * z
+def roman(color=None, **kwargs) -> Primitive:
 
     return Primitive(
-        implicit_function=expr,
+        implicit_function=x ** 2 * y ** 2
+        + x ** 2 * z ** 2
+        + y ** 2 * z ** 2
+        - 2.0 * x * y * z,
         color=color,
         aabb=AABB((-1, -1, -1), (1, 1, 1)),
         label="roman",
@@ -36,7 +45,7 @@ def roman(color=None, **kwargs):
     )
 
 
-def torus(R=0.7, r=0.3, color=None, **kwargs):
+def torus(R: float = 0.7, r: float = 0.3, color=None, **kwargs) -> Primitive:
 
     R2 = R * R
     r2 = r * r
@@ -46,7 +55,7 @@ def torus(R=0.7, r=0.3, color=None, **kwargs):
     return Primitive(
         implicit_function=quadric ** 2 - 4.0 * R2 * (x ** 2 + z ** 2),
         color=color,
-        aabb=None,  # AABB((-r - R, -r, -r - R), (r + R, r, r + R)),
+        aabb=AABB((-r - R, -r, -r - R), (r + R, r, r + R)),
         label="torus",
         **kwargs
     )

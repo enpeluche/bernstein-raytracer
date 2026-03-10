@@ -43,12 +43,8 @@ def cube(color=None, show_grid=False):
     return H_z_pos & H_z_neg & H_x_pos & H_x_neg & H_y_pos & H_y_neg
 
 
-def lens(R, h, color=None):
+def lens(R: float, h: float, color=None):
     s1 = sphere(radius=R, color=color).translate(-h, 0.0, 0.0)
     s2 = sphere(radius=R, color=color).translate(h, 0.0, 0.0)
 
     return s1 & s2
-
-
-def pipe(R, r, color=None):
-    c1 = 0
