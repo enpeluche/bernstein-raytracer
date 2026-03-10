@@ -1,6 +1,6 @@
 from Casteljau import *
 
-from BernsteinSolver import solve
+from BernsteinSolver import solve, has_root
 from math import sqrt, comb
 
 from constants import EPSILON
@@ -23,6 +23,7 @@ def unique_with_epsilon(values):
 class Polynomial:
     __slots__ = ("coefficients", "len")
     _mul_cache = {}
+    _BERNSTEIN_CACHE = {}
 
     """
     Représente un polynôme réel en base canonique (puissances de x).
@@ -274,7 +275,7 @@ class Polynomial:
 
         return Polynomial(self.coefficients[::-1])
 
-    def roots(self) -> list[float]:
+    def roots(self, t_min: float, t_max: float) -> list[float]:
         """
         Calcule les racines réelles du polynôme sur l'intervalle [0, +inf[.
 
@@ -301,7 +302,7 @@ class Polynomial:
         # On ajoute 0.0 aux solutions et on cherche les racines restantes dans Q(t).
         if len(P.coefficients) > 1 and abs(P.coefficients[0]) < EPSILON:
             # On crée le polynôme quotient Q(t) en décalant les coefficients
-            other_roots = Polynomial(P.coefficients[1:]).roots()
+            other_roots = Polynomial(P.coefficients[1:]).roots(t_min, t_max)
 
             # On combine 0.0 avec les autres racines en garantissant l'unicité
             return unique_with_epsilon(other_roots)
@@ -318,7 +319,8 @@ class Polynomial:
         # t = -b / a. Représente l'intersection avec un plan.
 
         if P.len == 2:
-            return [-P.coefficients[0] / P.coefficients[1]]
+            root = -P.coefficients[0] / P.coefficients[1]
+            return [root] if t_min <= root <= t_max else []
 
         # Degré 2 : Équation quadratique a*t² + b*t + c = 0.
         # Utilise le discriminant (Delta) pour les sphères, cylindres, etc.
@@ -331,13 +333,14 @@ class Polynomial:
             if abs(a) < EPSILON:
                 if abs(b) < EPSILON:
                     return []
-                return [-c / b]
+                root = -c / b
+                return [root] if t_min <= root <= t_max else []
 
             delta = b * b - 4 * a * c
 
             if abs(delta) < EPSILON:
-                t = -b / (2 * a)
-                return [t]
+                root = -b / (2 * a)
+                return [root] if t_min <= root <= t_max else []
 
             if delta < 0:
                 return []
@@ -347,37 +350,45 @@ class Polynomial:
             t1 = (-b - sqrt_delta) / (2 * a)
             t2 = (-b + sqrt_delta) / (2 * a)
 
-            return sorted([t1, t2])
+            return [t for t in sorted([t1, t2]) if t_min <= t <= t_max]
 
         # --- CAS NUMÉRIQUES (Artillerie lourde : Bernstein & Subdivision) ---
 
         solutions = []
 
-        # 1. Recherche sur l'intervalle local [0, 1]
-        # On convertit en base de Bernstein pour profiter de la propriété de
-        # l'enveloppe convexe (élimination rapide des segments sans racines).
+        if t_min <= 1.0:
+            # 1. Recherche sur l'intervalle local [0, 1]
+            # On convertit en base de Bernstein pour profiter de la propriété de
+            # l'enveloppe convexe (élimination rapide des segments sans racines).
 
-        roots_near = solve(P.to_bernstein_basis(), 0, 1.0, [])
-        solutions.extend(roots_near)
+            roots_near = solve(
+                P.to_bernstein_basis(), 0, 1.0, t_min, min(t_max, 1.0), []
+            )
+            solutions.extend(roots_near)
 
-        # 2. Recherche sur l'intervalle lointain [1, +inf[
-        # Astuce mathématique : on utilise le polynôme réciproque P_reverse(u).
-        # Les racines 'u' de P_reverse sur [0, 1] correspondent aux racines 't'
-        # de P sur [1, +inf[ via la relation t = 1/u.
+        if t_max > 1.0:
+            # 2. Recherche sur l'intervalle lointain [1, +inf[
+            # Astuce mathématique : on utilise le polynôme réciproque P_reverse(u).
+            # Les racines 'u' de P_reverse sur [0, 1] correspondent aux racines 't'
+            # de P sur [1, +inf[ via la relation t = 1/u.
 
-        roots_far_inv = solve(P.reverse().to_bernstein_basis(), 0, 1.0, [])
+            # u_min et u_max basés sur t_max et t_min
+            u_min = 1.0 / t_max if t_max != float("inf") else 0.0
+            u_max = 1.0 / max(1.0, t_min)
 
-        roots_far = []
-        for u in roots_far_inv:
-            if abs(u) > EPSILON:  # Évite la division par zéro (racine à l'infini)
-                t = 1.0 / u
+            roots_far_inv = solve(
+                P.reverse().to_bernstein_basis(), 0, 1.0, u_min, u_max, []
+            )
 
-                if (
-                    t > 1.0 + EPSILON
-                ):  # On ne garde que ce qui est strictement au-delà de 1
-                    roots_far.append(t)
+            roots_far = []
+            for u in roots_far_inv:
+                if abs(u) > EPSILON:  # Évite la division par zéro (racine à l'infini)
+                    t = 1.0 / u
 
-        solutions.extend(sorted(roots_far))
+                    if t > 1.0 + EPSILON and t_min <= t <= t_max:
+                        roots_far.append(t)
+
+            solutions.extend(sorted(roots_far))
 
         # --- FINALISATION ---
 
@@ -385,6 +396,76 @@ class Polynomial:
             return []
 
         return unique_with_epsilon(solutions)
+
+    def has_any_root(self, t_min: float, t_max: float) -> bool:
+        """Détermine si au moins une racine existe dans [t_min, t_max]."""
+        P = self
+        if not P.coefficients:
+            return False
+
+        # --- GESTION ORIGINE ---
+        if len(P.coefficients) > 1 and abs(P.coefficients[0]) < EPSILON:
+            if t_min <= 0.0 <= t_max:
+                return True
+            # Sinon on cherche dans le reste
+            return Polynomial(P.coefficients[1:]).has_any_root(t_min, t_max)
+
+        # --- CAS ANALYTIQUES (Rapides) ---
+        if P.len == 1:
+            return False
+
+        if P.len == 2:
+            root = -P.coefficients[0] / P.coefficients[1]
+            return t_min <= root <= t_max
+
+        if P.len == 3:
+            c, b, a = P.coefficients[0], P.coefficients[1], P.coefficients[2]
+            if abs(a) < EPSILON:
+                if abs(b) < EPSILON:
+                    return False
+                return t_min <= (-c / b) <= t_max
+
+            delta = b * b - 4 * a * c
+            if delta < 0:
+                return False
+
+            if abs(delta) < EPSILON:
+                return t_min <= (-b / (2 * a)) <= t_max
+
+            sqrt_delta = delta ** 0.5
+            t1 = (-b - sqrt_delta) / (2 * a)
+            if t_min <= t1 <= t_max:
+                return True  # Arrêt précoce
+
+            t2 = (-b + sqrt_delta) / (2 * a)
+            return t_min <= t2 <= t_max
+
+        # --- CAS NUMÉRIQUES (Bernstein court-circuité) ---
+        if t_min <= 1.0:
+            if has_root(P.to_bernstein_basis(), 0.0, 1.0, t_min, min(t_max, 1.0)):
+                return True
+
+        if t_max > 1.0:
+            u_min = 1.0 / t_max if t_max != float("inf") else 0.0
+            u_max = 1.0 / max(1.0, t_min)
+            # Dès que la première racine lointaine est validée, ça remonte et sort !
+            if has_root(P.reverse().to_bernstein_basis(), 0.0, 1.0, u_min, u_max):
+                return True
+
+        return False
+
+    @classmethod
+    def _get_bernstein_matrix(cls, n):
+        """Méthode de classe pour gérer le cache des matrices de passage."""
+        if n not in cls._BERNSTEIN_CACHE:
+            # On génère la matrice triangulaire inférieure
+            matrix = []
+            for k in range(n + 1):
+                row = [comb(k, i) / comb(n, i) for i in range(k + 1)]
+                matrix.append(row)
+            cls._BERNSTEIN_CACHE[n] = matrix
+
+        return cls._BERNSTEIN_CACHE[n]
 
     def to_bernstein_basis(self) -> list[float]:
         """
@@ -404,13 +485,21 @@ class Polynomial:
         Returns:
             list[float]: Les points de contrôle de la courbe de Bézier équivalente sur [0, 1].
         """
-        pol = [0] * self.len
+        n = self.len - 1
+        if n < 0:
+            return []
 
-        for k in range(self.len):
-            for i in range(k + 1):
-                pol[k] += self.coefficients[i] * (comb(k, i) / comb(self.len - 1, i))
+        matrix = self._get_bernstein_matrix(n)
 
-        return pol
+        bernstein_coeffs = [0.0] * self.len
+
+        for k, row in enumerate(matrix):
+            s = 0.0
+            for i, matrix_val in enumerate(row):
+                s += self.coefficients[i] * matrix_val
+            bernstein_coeffs[k] = s
+
+        return bernstein_coeffs
 
     def __str__(self):
         return f"Polynomial([{', '.join(str(c) for c in self.coefficients)}])"
