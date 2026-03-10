@@ -1,5 +1,11 @@
 from .cones import elliptic_cone, circular_cone
-from .cylinders import cylinder, elliptic_cylinder, circular_cylinder
+from .cylinders import (
+    cylinder,
+    elliptic_cylinder,
+    circular_cylinder,
+    hyperbolic_cylinder,
+    parabolic_cylinder,
+)
 from .ellipsoids import sphere, ellipsoid, oblate
 from .hyperboloids import (
     hyperboloid_of_one_sheet,

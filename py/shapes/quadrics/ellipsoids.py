@@ -2,12 +2,16 @@ from geometry import Primitive
 from DAG import x, y, z
 from geometry import AABB
 
+# Define the canonical (unit-space) parameters used as templates for all shapes
+UNIT_SPHERE = x ** 2 + y ** 2 + z ** 2 - 1.0
+UNIT_AABB = AABB((-1.0, -1.0, -1.0), (1.0, 1.0, 1.0))
 
-def sphere(radius=1.0, color=None, **kwargs):
+
+def sphere(radius: float = 1.0, color=None, **kwargs) -> Primitive:
     prim = Primitive(
-        implicit_function=x ** 2 + y ** 2 + z ** 2 - 1.0,
+        implicit_function=UNIT_SPHERE,
         color=color,
-        aabb=AABB((-1.0, -1.0, -1.0), (1.0, 1.0, 1.0)),
+        aabb=UNIT_AABB,
         label="sphere",
         **kwargs
     )
@@ -18,11 +22,11 @@ def sphere(radius=1.0, color=None, **kwargs):
     return prim
 
 
-def ellipsoid(a, b, c, color, **kwargs):
+def ellipsoid(a: float, b: float, c: float, color=None, **kwargs) -> Primitive:
     prim = Primitive(
-        implicit_function=x ** 2 + y ** 2 + z ** 2 - 1.0,
+        implicit_function=UNIT_SPHERE,
         color=color,
-        aabb=AABB((-1.0, -1.0, -1.0), (1.0, 1.0, 1.0)),
+        aabb=UNIT_AABB,
         label="ellipsoid",
         **kwargs
     )
@@ -32,11 +36,11 @@ def ellipsoid(a, b, c, color, **kwargs):
     return prim
 
 
-def oblate(radius, height, color, **kwargs):
+def oblate(radius: float, height: float, color=None, **kwargs) -> Primitive:
     prim = Primitive(
-        implicit_function=x ** 2 + y ** 2 + z ** 2 - 1.0,
+        implicit_function=UNIT_SPHERE,
         color=color,
-        aabb=AABB((-1.0, -1.0, -1.0), (1.0, 1.0, 1.0)),
+        aabb=UNIT_AABB,
         label="oblate",
         **kwargs
     )
