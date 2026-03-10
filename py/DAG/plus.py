@@ -216,7 +216,14 @@ class Plus(DAG):
 
         for coeff, factors in term_factors:
 
-            coeff = coeff / common_coeff
+            # Dans plus.py, méthode _try_extract_common_factor
+            if (
+                abs(common_coeff) > 1e-11
+            ):  # On ne divise que si ce n'est pas (presque) zéro
+                coeff = coeff / common_coeff
+            else:
+                # Si c'est trop petit, on abandonne la factorisation pour ce terme
+                pass
 
             new_factors = []
 
@@ -236,12 +243,12 @@ class Plus(DAG):
 
             stripped_terms.append(stripped)
 
-        inner_plus = Plus.make(*stripped_terms)
+        inner_plus = Plus.make(*stripped_terms, allow_factor=False)
 
         return Mult.make(common_factor, inner_plus)
 
     @staticmethod
-    def make(*args):
+    def make(*args, allow_factor=True):
 
         flat, constant_sum = Plus._flatten_args(args)
 
@@ -260,10 +267,11 @@ class Plus(DAG):
             sorted(new_terms, key=str)
         )  # 5️⃣ Canonicalisation (ordre stable)
 
-        factored = Plus._try_extract_common_factor(new_terms)
+        if allow_factor:
+            factored = Plus._try_extract_common_factor(new_terms)
 
-        if factored is not None:
-            return factored
+            if factored is not None:
+                return factored
 
         if new_terms in Plus._cache:
             return Plus._cache[new_terms]
