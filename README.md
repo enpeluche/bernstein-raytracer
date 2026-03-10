@@ -1,4 +1,88 @@
-# bernstein-raytracer
+# Surfaces
+
+Ici commencer par roman qui tourne, tore qui tourne
+<div align="center">
+  <table style="margin-left: auto; margin-right: auto;">
+    <tr>
+      <td align="center">
+        <img src="gallery/roman_rotation_z.gif" width="200"><br>
+        <sub><b>Type:</b> Roman Surface (Z-axis rotation)<br><b>Camera:</b> Perspective</sub>
+      </td>
+    </tr>
+  </table>
+  
+</div>
+
+## La galerie des surfaces implicites
+
+### Surfaces algébriques de degré 2 : Les quadriques
+
+<div align="center">
+  <table style="margin-left: auto; margin-right: auto;">
+    <tr>
+      <td align="center">
+        <img src="gallery/ellipsoid_orthographiccamera.png" width="200"><br>
+        <sub><b>Type:</b> Ellipsoid<br><b>Camera:</b> Orthographic</sub>
+      </td>
+      <td align="center">
+        <img src="gallery/elliptic_cone_fovperspectivecamera.png" width="200"><br>
+        <sub><b>Type:</b> Elliptic Cone<br><b>Camera:</b> FOV Perspective</sub>
+      </td>
+      <td align="center">
+        <img src="gallery/elliptic_cylinder_fisheyecamera.png" width="200"><br>
+        <sub><b>Type:</b> Elliptic Cylinder<br><b>Camera:</b> Fisheye</sub>
+      </td>
+    </tr>
+  </table>
+  <table style="margin-left: auto; margin-right: auto;">
+    <tr>
+      <td align="center">
+        <img src="gallery/hyperbolic_cylinder_thinLenscamera.png" width="300"><br>
+        <sub><b>Type:</b> Hyperbolic Cylinder<br><b>Camera:</b> Thin Lens (DOF)</sub>
+      </td>
+      <td align="center">
+        <img src="gallery/hyperboloid_of_two_sheets_cylindricalcamera.png" width="300"><br>
+        <sub><b>Type:</b> Hyperboloid (2 Sheets)<br><b>Camera:</b> Cylindrical</sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+### Surfaces algébriques de degré 4
+
+<div align="center">
+  <table style="margin-left: auto; margin-right: auto;">
+    <tr>
+      <td align="center">
+        <img src="gallery/steiner2_cylindricalcamera.png" width="200"><br>
+        <sub><b>Type:</b> Steiner Surface (Type 2)<br><b>Camera:</b> Cylindrical</sub>
+      </td>
+      <td align="center">
+        <img src="gallery/steiner4_thinLenscamera.png" width="200"><br>
+        <sub><b>Type:</b> Steiner Surface (Type 4)<br><b>Camera:</b> Thin Lens (DOF)</sub>
+      </td>
+      <td align="center">
+        <img src="gallery/torus_fisheyecamera.png" width="200"><br>
+        <sub><b>Type:</b> Torus<br><b>Camera:</b> Fisheye</sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
+## Un peu de CSG
+
+<div align="center">
+  <table style="margin-left: auto; margin-right: auto;">
+    <tr>
+      <td align="center">
+        <img src="gallery/barillet_anim.gif" width="300"><br>
+        <sub><b>Type:</b> Revolver Cylinder (CSG Animation)<br><b>Camera:</b> Orthographic</sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
 
 Sauf-ci mention contraire, nous travaillons dans l'espace vectoriel normé $\R^3$, muni du produit scalaire usuel, par exemple, on ne précisera pas que le point $c=(c_x, c_y, c_z)$ est un triplet de réel.
 

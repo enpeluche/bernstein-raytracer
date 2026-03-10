@@ -1,6 +1,5 @@
 benchmarks
-*.png
-*.gif
+output
 *.md
 *.txt
 *.prof
