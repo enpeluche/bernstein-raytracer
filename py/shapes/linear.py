@@ -2,81 +2,70 @@ from geometry import Primitive
 from DAG import z
 from Interval import Interval
 from constants import EPSILON
+from geometry.AABB import AABB
 
-bias = 0.001
+BIAS = 0.001
 
 
-def plane(color, **kwargs):
-    return Primitive(implicit_function=z, color=color, label="plane", **kwargs)
+def plane(color=None, **kwargs) -> Primitive:
+    """Helper for a simple infinite plane at z=0."""
+    return HalfSpace(color=color, **kwargs)
 
 
 class HalfSpace(Primitive):
     """
-    Represents an infinite half-space.
-    By default, the half-space is defined at z < 0 (XY-half-space).
+    Represents an infinite half-space (z <= 0).
+    Perfect for capping infinite cylinders or slicing objects via CSG.
     """
 
-    def __init__(self, color=None, show_grid=False):
-        from DAG import plane_implicit_function
-
-        # Initialize the primitive with its specific DAG node and properties
-        # we use PlaneDAG since normal is the same
-        super().__init__(
-            implicit_function=plane_implicit_function(),
-            color=color,
-            dual_color=True,
-            show_grid=show_grid,
-            bbox=None,
+    def __init__(self, color=None, **kwargs):
+        # We define an AABB that is infinite in X, Y and negative Z
+        inf_aabb = AABB(
+            (-float("inf"), -float("inf"), -float("inf")),
+            (float("inf"), float("inf"), 0.0),
         )
 
-    def intersect(self, ray):
-        """
-        Computes the intersection between a ray and the half-space.
-        Solves the linear equation: oz + t * dz <= 0
-        """
+        super().__init__(
+            implicit_function=z,  # On passe directement le noeud DAG
+            color=color,
+            aabb=inf_aabb,
+            label="half_space",
+            **kwargs
+        )
 
-        # 1. Transform ray from world space to local space
-        trf_ray = ray
+    def intersection(self, ray):  # Renommé pour la cohérence CSG
+        """Computes the intersection between a ray and the half-space z <= 0."""
 
-        if self.transformation is not None:
-            trf_ray = ray.transform(~self.transformation)
+        # 1. Coordinate space transformation
+        local_ray = ray.transform(~self.transformation) if self.transformation else ray
 
-        # 2. Extract Z components (since plane is at z=0)
-        _, _, oz = trf_ray.origin
-        _, _, dz = trf_ray.direction
+        _, _, oz = local_ray.origin
+        _, _, dz = local_ray.direction
 
-        # 3. Initialize the default interval for a semi-infinite volume
-        t_start = 0.0
-        t_end = float("inf")
+        # 2. Ray range from the ray itself
+        t_start = ray.t_min
+        t_end = ray.t_max
 
-        # 4. Solve the linear inequality: oz + t * dz <= 0
-
-        if abs(dz) < EPSILON:  # Case: Ray is parallel to the plane
+        # 3. Solve the linear inequality: oz + t * dz <= 0
+        if abs(dz) < EPSILON:  # Ray is parallel to the XY plane
             if oz > 0:
-                return []  # Ray is entirely outside
-            # Else: Ray is entirely inside (keep [0, inf])
+                return []  # Entirely outside (above the plane)
+            # Else: Entirely inside (keep the full ray range)
+        else:
+            t_hit = -oz / dz
+            if dz > 0:
+                # Ray is pointing UP: it exits the matter at t_hit
+                t_end = min(t_end, t_hit)
+            else:
+                # Ray is pointing DOWN: it enters the matter at t_hit
+                t_start = max(t_start, t_hit)
 
-        elif dz >= EPSILON:  # Case : Ray points UP (exiting the volume)
-            t_root = -oz / dz
-            t_end = min(t_end, t_root)
-
-        else:  # Case : Ray points DOWN (entering the volume)
-            t_root = -oz / dz
-            t_start = max(t_start, t_root)
-
-        # 5. Final check: if the interval is invalid or entirely behind the camera
-        if t_start > t_end or t_end < bias:
+        # 4. Final validation
+        if t_start > t_end or t_end < BIAS:
             return []
 
-        # 6. Build Hit Records
-        # Note: t_start can be 0.0 if we start inside
-        # hit_a and hit_b represent the segment of the ray trapped in the matter
+        # 5. Return the interval trapped in the half-space
+        hit_in = self.evaluate_hit(local_ray, t_start)
+        hit_out = self.evaluate_hit(local_ray, t_end)
 
-        hit_a = self.evaluate_hit(trf_ray, t_start)
-        hit_b = self.evaluate_hit(trf_ray, t_end)
-
-        if self.transformation is not None:
-            hit_a = self._local_to_world(hit_a, ray)
-            hit_b = self._local_to_world(hit_b, ray)
-
-        return [Interval(hit_a, hit_b)]
+        return [Interval(hit_in, hit_out)]
