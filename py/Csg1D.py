@@ -6,8 +6,8 @@ def union(A: list[Interval], B: list[Interval]) -> list[Interval]:
     Fusionne deux listes d'intervalles (Union CSG) de manière itérative.
 
     Args:
-        A (list[Interval]): La première liste d'intervalles (triée par t).
-        B (list[Interval]): La deuxième liste d'intervalles (triée par t).
+        A (list[Interval]): La première liste d'intervalles (triée par impact_time).
+        B (list[Interval]): La deuxième liste d'intervalles (triée par impact_time).
 
     Returns:
         list[Interval]: La liste résultante des intervalles fusionnés.
@@ -19,7 +19,7 @@ def union(A: list[Interval], B: list[Interval]) -> list[Interval]:
 
     # Étape 1 : Tri fusion des deux listes
     while i < len(A) and j < len(B):
-        if A[i].hit_in.t < B[j].hit_in.t:
+        if A[i].hit_in.impact_time < B[j].hit_in.impact_time:
             merged_list.append(A[i])
             i += 1
         else:
@@ -38,9 +38,9 @@ def union(A: list[Interval], B: list[Interval]) -> list[Interval]:
     for current in merged_list[1:]:
         last = result[-1]
 
-        if current.hit_in.t <= last.hit_out.t:
+        if current.hit_in.impact_time <= last.hit_out.impact_time:
             # Chevauchement ou inclusion : on étend la borne supérieure si nécessaire
-            if current.hit_out.t > last.hit_out.t:
+            if current.hit_out.impact_time > last.hit_out.impact_time:
                 # avant : last.hit_out = current.hit_out
                 result[-1] = Interval(last.hit_in, current.hit_out)
 
@@ -67,27 +67,27 @@ def inter(A: list[Interval], B: list[Interval]) -> list[Interval]:
 
     while i < len(A) and j < len(B):
         # Choix du hit_in (le plus tardif des deux)
-        if A[i].hit_in.t > B[j].hit_in.t:
+        if A[i].hit_in.impact_time > B[j].hit_in.impact_time:
             start_hit = A[i].hit_in
-            t_start = A[i].hit_in.t
+            t_start = A[i].hit_in.impact_time
         else:
             start_hit = B[j].hit_in
-            t_start = B[j].hit_in.t
+            t_start = B[j].hit_in.impact_time
 
         # Choix du hit_out (le plus précoce des deux)
-        if A[i].hit_out.t < B[j].hit_out.t:
+        if A[i].hit_out.impact_time < B[j].hit_out.impact_time:
             end_hit = A[i].hit_out
-            t_end = A[i].hit_out.t
+            t_end = A[i].hit_out.impact_time
         else:
             end_hit = B[j].hit_out
-            t_end = B[j].hit_out.t
+            t_end = B[j].hit_out.impact_time
 
         # Si l'intervalle est valide, on l'ajoute
         if t_start < t_end:
             result.append(Interval(start_hit, end_hit))
 
         # Avancement : l'intervalle qui se termine le plus tôt est épuisé
-        if A[i].hit_out.t < B[j].hit_out.t:
+        if A[i].hit_out.impact_time < B[j].hit_out.impact_time:
             i += 1
         else:
             j += 1
@@ -115,8 +115,8 @@ def differ(A: list[Interval], B: list[Interval]) -> list[Interval]:
 
     else:
         # Déballage rapide sans créer de listes inutiles
-        a1, a2 = [A[0].hit_in.t, A[0].hit_out.t]
-        b1, b2 = [B[0].hit_in.t, B[0].hit_out.t]
+        a1, a2 = [A[0].hit_in.impact_time, A[0].hit_out.impact_time]
+        b1, b2 = [B[0].hit_in.impact_time, B[0].hit_out.impact_time]
 
         assert a1 <= a2
         assert b1 <= b2
