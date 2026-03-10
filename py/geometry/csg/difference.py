@@ -30,3 +30,20 @@ class Difference(CSGNode):
             interval.hit_out.invert()
 
         return differ(left_intervals, right_intervals)
+
+    def any_intersection(self, ray) -> bool:
+        if not self.aabb.intersection(ray):
+            return False
+
+        # Si le côté gauche (l'objet principal) ne touche pas, c'est fini.
+        if not self.left.any_intersection(ray):
+            return False
+
+        # Si la gauche touche mais que la droite ne touche pas du tout,
+        # alors la différence touche forcément.
+        if not self.right.any_intersection(ray):
+            return True
+
+        # Si les deux touchent, on doit vérifier si la droite ne "mange" pas
+        # toute la gauche.
+        return bool(self.intersection(ray))

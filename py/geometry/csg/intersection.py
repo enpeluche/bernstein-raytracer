@@ -17,3 +17,15 @@ class Intersection(CSGNode):
             return []
 
         return inter(self.left.intersection(ray), self.right.intersection(ray))
+
+    def any_intersection(self, ray) -> bool:
+        if not self.aabb.intersection(ray):
+            return False
+
+        # On vérifie d'abord si les deux touchent individuellement (rapide)
+        if not self.left.any_intersection(ray) or not self.right.any_intersection(ray):
+            return False
+
+        # Si les deux touchent, on est obligé de calculer les intervalles réels
+        # pour vérifier s'ils se chevauchent.
+        return bool(self.intersection(ray))

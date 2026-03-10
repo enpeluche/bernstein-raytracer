@@ -11,11 +11,13 @@ import glob
 
 
 class Renderer:
-    def __init__(self, scene):
+    def __init__(self, scene, name="render", folder=""):
 
         self.scene = scene
         self.frame_count = 0
         self.total_time = 0
+        self.name = name
+        self.folder = folder
 
         if os.path.exists("tmp"):
             shutil.rmtree("tmp")
@@ -36,30 +38,54 @@ class Renderer:
 
         self.frame_count += 1
 
-    def save(self, format="png"):
-        msg = f"Frame: {self.frame_count} | Temps total d'exécution : {self.total_time} secondes"
-
+    def save(self, format="png", base_output="output"):
+        msg = f"Frame: {self.frame_count} | Temps total d'exécution : {self.total_time:.2f} secondes"
         print(msg.ljust(50), end="\n", flush=True)
+
+        search_pattern = os.path.join("tmp", "*.png")
+        files = glob.glob(search_pattern)
+        files.sort()
+
+        if not files:
+            print("Aucune image à sauvegarder.")
+            return
+
+        target_dir = (
+            os.path.join(base_output, self.folder) if self.folder else base_output
+        )
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+
+        # --- L'AJOUT EST ICI ---
+        # On récupère le nom de la caméra (ex: "demo_fisheye")
+        cam_name = self.scene.camera.name
+
+        # On crée le nom final : "nom_du_rendu_nom_de_la_camera"
+        # Exemple : "test_demo_fisheye"
+        final_name = f"{self.name}_{cam_name}" if cam_name else self.name
+        # -----------------------
+
         if format == "png":
-            pass
+            if len(files) == 1:
+                target_path = os.path.join(target_dir, f"{final_name}.png")
+                shutil.copy(files[0], target_path)
+            else:
+                anim_dir = os.path.join(target_dir, final_name)
+                if not os.path.exists(anim_dir):
+                    os.makedirs(anim_dir)
+                for f in files:
+                    filename = os.path.basename(f)
+                    shutil.copy(f, os.path.join(anim_dir, filename))
 
-        if format == "gif":
-
-            search_pattern = os.path.join("tmp", "*.png")
-            files = glob.glob(search_pattern)
-
-            files.sort()
-
-            if not files:
-                return
-
+        elif format == "gif":
             frames = [Image.open(f) for f in files]
+            target_path = os.path.join(target_dir, f"{final_name}.gif")
 
             frames[0].save(
-                "mon_film.gif",
+                target_path,
                 save_all=True,
                 append_images=frames[1:],
                 optimize=True,
-                duration=100,
+                duration=60,
                 loop=0,
             )

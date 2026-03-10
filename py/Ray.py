@@ -31,7 +31,7 @@ class Ray:
         direction: tuple[float, float, float],
         should_normalize: bool = True,
         t_min: float = EPSILON,
-        t_max: float = 20.0,  # float("inf"),
+        t_max: float = float("inf"),
     ) -> None:
         """
         Initialize a new ray.
@@ -77,6 +77,11 @@ class Ray:
             self.norm_squared_direction,
             self.dot,
         )
+
+    def point_at(self, t: float) -> tuple[float, float, float]:
+        ox, oy, oz = self.origin
+        dx, dy, dz = self.direction
+        return (ox + t * dx, oy + t * dy, oz + t * dz)
 
     def transform(self, transformation: Transformation) -> "Ray":
         """

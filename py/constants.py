@@ -4,13 +4,13 @@ DEG = PI / 180.0
 
 # --- Paramètres de Rendu ---
 FOG_START = 10.0
-FOG_END = 10.5
+FOG_END = 15
 
 SHADOW_BIAS = 0.001
-SHADOW_OPACITY = 0.5
-AMBIENT_LIGHT = 0.1
+SHADOW_OPACITY = 0.3
+AMBIENT_LIGHT = 0.12
 
-RENDER_SIZE = 750
+RENDER_SIZE = 500
 
 # --- Palette de Couleurs (RGB) ---
 WHITE = (255, 255, 255)
@@ -27,3 +27,16 @@ UP = (0.0, 0.0, 1.0)
 
 
 EPSILON = 1e-9
+
+
+RAY_PROTOCOL = ["ox", "oy", "oz", "dx", "dy", "dz", "O2", "D2", "OD"]
+NORMAL_PROTOCOL = ["x", "y", "z"]
+
+
+GRID_SPACING = 0.25
+
+GRID_THICKNESS_SCALE = 0.0008
+
+GRID_BASE_THICKNESS = 0.003
+
+GRID_MAX_THICKNESS = GRID_SPACING * 0.4

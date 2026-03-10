@@ -72,6 +72,13 @@ class DAG:
 
         return self + (-b)
 
+    def __rsub__(self, b) -> "DAG":
+        """
+        Create a subtraction node by adding a negation.
+        """
+
+        return b + (-self)
+
     def __mul__(self, b) -> "DAG":
         """
         Create a multiplication node (self * other).

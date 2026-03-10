@@ -17,3 +17,10 @@ class Union(CSGNode):
             return []
 
         return union(self.left.intersection(ray), self.right.intersection(ray))
+
+    def any_intersection(self, ray) -> bool:
+        if not self.aabb.intersection(ray):
+            return False
+
+        # Court-circuit : si le gauche touche, on n'évalue même pas le droit.
+        return self.left.any_intersection(ray) or self.right.any_intersection(ray)

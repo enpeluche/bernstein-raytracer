@@ -1,9 +1,6 @@
 from PIL import Image
 from Ray import Ray
 from constants import *
-from math import sqrt
-
-from Intervalle import *
 
 
 class Scene:
@@ -15,8 +12,6 @@ class Scene:
 
         self.background_color = background_color
 
-        # il lui faut le contenu de la scene
-
     def raycasting(self):
         z_img = 0
 
@@ -24,22 +19,25 @@ class Scene:
 
         img = Image.new("RGB", (width, height))
 
-        for zpix in range(height // 2, -height // 2, -1):
+        for zpix in range(height):
 
             row_pixels = []
 
-            print(f"zpix: {zpix:05d}", end="\r")
-
-            for xpix in range(-width // 2, width // 2):
+            for xpix in range(width):
 
                 ray = self.camera.generate_ray(xpix, zpix)
-                intervalles = self.scene.intersection(ray)
 
-                if not intervalles:
+                if ray is None:
                     row_pixels.append(self.background_color)
                     continue
 
-                color = self.rendering(ray, intervalles[0].a)
+                intervals = self.scene.intersection(ray)
+
+                if not intervals:
+                    row_pixels.append(self.background_color)
+                    continue
+
+                color = self.rendering(intervals[0].hit_in)  # on rend le premier trouvé
 
                 row_pixels.append(color)
 
@@ -53,33 +51,29 @@ class Scene:
 
         return img
 
-    def rendering(self, ray, rayHit):
+    def rendering(self, rayHit):
 
-        (red, green, blue) = rayHit.color
+        base_color = rayHit.primitive.get_surface_color(rayHit)
 
-        (red, green, blue) = self._apply_face_color(ray, rayHit)
+        lit_color = self._apply_lighting(rayHit, base_color)
 
-        (red, green, blue) = self._apply_lighting(
-            rayHit.pt, rayHit.plan, (red, green, blue)
-        )
+        final_color = self._apply_fog(rayHit, lit_color)
 
-        # (red, green, blue) = self._apply_grid_pattern(rayHit, (red, green, blue))
+        return final_color
 
-        (red, green, blue) = self._apply_fog(rayHit.t, (red, green, blue))
+    def _apply_fog(self, rayHit, current_color):
+        impact_time = rayHit.impact_time
 
-        return (red, green, blue)
+        if impact_time < FOG_START:
+            return current_color
 
-    def _apply_fog(self, t, color):
-        if t < FOG_START:
-            return color
-
-        if t > FOG_END:
+        if impact_time > FOG_END:
             return self.background_color
 
         bg_r, bg_g, bg_b = self.background_color
-        red, green, blue = color
+        red, green, blue = current_color
 
-        fog = (t - FOG_START) / (FOG_END - FOG_START)
+        fog = (impact_time - FOG_START) / (FOG_END - FOG_START)
 
         inv_fog = 1 - fog
 
@@ -89,103 +83,37 @@ class Scene:
 
         return (red, green, blue)
 
-    def _apply_face_color(self, ray, rayHit):
-        # je suis certain que cela fait ce que ça fait ?
-        (nx, ny, nz, d) = rayHit.plan
+    def _apply_lighting(self, rayHit, current_color):
+        rr, vv, bb = current_color
+        nx, ny, nz = rayHit.world_normal
+        lx, ly, lz = self.camera.light_dir
 
-        dot_product = (
-            ray.direction[0] * nx + ray.direction[1] * ny + ray.direction[2] * nz
-        )
-
-        if dot_product < 0:
-            return rayHit.color
-
-        (r, g, b) = rayHit.color
-
-        return (255 - r, 255 - g, 255 - b)
-
-    def _apply_lighting(self, pt, plan, color):
-        (rr, vv, bb) = color
-        (nx, ny, nz, d) = plan
-        (lx, ly, lz) = self.camera.light_dir
-
-        # sert à calculer l'angle entre lalumière et la normale
         ps = nx * lx + ny * ly + nz * lz
 
-        # utile ? à voir
-        diffuse_intensity = abs(ps)
-        diffuse = diffuse_intensity * 0.9
+        if ps < 0:
+            return (
+                int(AMBIENT_LIGHT * rr),
+                int(AMBIENT_LIGHT * vv),
+                int(AMBIENT_LIGHT * bb),
+            )
 
-        bias_direction = 1.0 if ps > 0 else -1.0
+        diffuse = ps * 0.9
 
         origin_shadow = (
-            pt[0] + nx * shadow_bias * bias_direction,
-            pt[1] + ny * shadow_bias * bias_direction,
-            pt[2] + nz * shadow_bias * bias_direction,
+            rayHit.world_impact_point[0] + nx * SHADOW_BIAS,
+            rayHit.world_impact_point[1] + ny * SHADOW_BIAS,
+            rayHit.world_impact_point[2] + nz * SHADOW_BIAS,
         )
 
         shadow_ray = Ray(origin_shadow, (lx, ly, lz))
 
-        obstacles = self.scene.intersection(shadow_ray)
+        is_occluded = self.scene.any_intersection(shadow_ray)
 
-        if obstacles:
-            coef = ambient + diffuse * (1.0 - shadow_opacity)
+        if is_occluded:
+            coef = AMBIENT_LIGHT + diffuse * (1.0 - SHADOW_OPACITY)
         else:
-            coef = ambient + diffuse
+            coef = AMBIENT_LIGHT + diffuse
 
         coef = min(1.0, coef)
 
         return (int(coef * rr), int(coef * vv), int(coef * bb))
-
-    def _apply_grid_pattern(self, rayHit, color):
-        vx = rayHit.pt[0] - self.camera.cam_o[0]
-        vy = rayHit.pt[1] - self.camera.cam_o[1]
-        vz = rayHit.pt[2] - self.camera.cam_o[2]
-
-        dist = sqrt(vx * vx + vy * vy + vz * vz)
-
-        if dist < 0.0001:
-            return color
-
-        vx, vy, vz = vx / dist, vy / dist, vz / dist
-
-        spacing = 0.25
-
-        K = 0.0008
-
-        base_thickness = 0.003
-
-        max_allowed_thickness = spacing * 0.4
-
-        raw_thickness = base_thickness + (dist * K)
-        thickness = min(raw_thickness, max_allowed_thickness)
-
-        px = abs(rayHit.pt[0] + spacing / 2.0)
-        py = abs(rayHit.pt[1] + spacing / 2.0)
-        pz = abs(rayHit.pt[2] + spacing / 2.0)
-
-        mx = px % spacing
-        my = py % spacing
-        mz = pz % spacing
-
-        dx = min(mx, spacing - mx)
-        dy = min(my, spacing - my)
-        dz = min(mz, spacing - mz)
-
-        if dx < thickness or dy < thickness or dz < thickness:
-
-            fade_factor = 1.0
-            if dist > 5.0:
-
-                fade_factor = max(0.3, 1.0 - (dist - 10.0) * 0.05)
-
-            grid_r, grid_g, grid_b = 255 - color[0], 255 - color[1], 255 - color[2]
-            obj_r, obj_g, obj_b = color
-
-            final_r = int(obj_r * (1 - fade_factor) + grid_r * fade_factor)
-            final_g = int(obj_g * (1 - fade_factor) + grid_g * fade_factor)
-            final_b = int(obj_b * (1 - fade_factor) + grid_b * fade_factor)
-
-            return (final_r, final_g, final_b)
-        else:
-            return color

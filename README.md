@@ -1,5 +1,7 @@
 # Bernstein-Ray: Symbolic Raytracer for Algebraic Implicit Surfaces
 
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 <div align="center">
   <table style="margin-left: auto; margin-right: auto;">
     <tr>
@@ -215,3 +217,8 @@ The roots of g(t) correspond to ray–surface intersections.
 Bernstein-Ray isolates roots using **Bernstein polynomial subdivision**
 based on the **de Casteljau algorithm**, which provides robust root finding
 without requiring explicit polynomial solving.
+
+
+Performance
+
+Future work

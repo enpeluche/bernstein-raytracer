@@ -208,9 +208,11 @@ class Primitive(GeometryObject):
 
         numeric_coeffs = self.f_evaluator(*local_ray.eval_params)
 
+        POL = Polynomial(numeric_coeffs)
+
         # Extract real roots via Bernstein basis subdivision. The de Casteljau-based
         # algorithm inherently produces roots in ascending order.
-        roots = Polynomial(numeric_coeffs).roots(local_ray.t_min, local_ray.t_max)
+        roots = POL.roots(local_ray.t_min, local_ray.t_max)
 
         # "I've got no roots..." — Alice Merton.
         # Early exit: the ray misses the surface geometry entirely.
@@ -231,24 +233,29 @@ class Primitive(GeometryObject):
             return [Interval(hit, hit)]
 
         # Création des intervalles par paires (Entrée -> Sortie)
-        for i in range(0, len(roots) - 1, 2):
+        for i in range(0, len(roots) - 1):
             impact_time_in = roots[i]
             impact_time_out = roots[i + 1]
 
-            if impact_time_out < ray.t_min:  # culling
-                continue
+            mid_t = (impact_time_in + impact_time_out) * 0.5
 
-            if impact_time_in > ray.t_max:
-                break
+            if POL(mid_t) < 0:
 
-            if impact_time_in < ray.t_min:
-                impact_time_in = ray.t_min
+                # ici on regarde le point au rayon
+                if impact_time_out < ray.t_min:  # culling
+                    continue
 
-            #  ici avec cette méthode le repère parent est le monde
-            hit_a = self.evaluate_hit(local_ray, impact_time_in)
-            hit_b = self.evaluate_hit(local_ray, impact_time_out)
+                if impact_time_in > ray.t_max:
+                    break
 
-            intervals.append(Interval(hit_a, hit_b))
+                if impact_time_in < ray.t_min:
+                    impact_time_in = ray.t_min
+
+                #  ici avec cette méthode le repère parent est le monde
+                hit_a = self.evaluate_hit(local_ray, impact_time_in)
+                hit_b = self.evaluate_hit(local_ray, impact_time_out)
+
+                intervals.append(Interval(hit_a, hit_b))
 
         return intervals
 

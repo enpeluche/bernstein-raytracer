@@ -1,6 +1,6 @@
 from DAG import *
 from Polynomial import *
-from DAG.compiler import optimize_patterns, topo_sort, generate_python_function
+from DAG.compiler import optimize_patterns, topological_sort, generate_python_function
 
 x, y, z = Variable.make("x"), Variable.make("y"), Variable.make("z")
 
@@ -13,8 +13,19 @@ env = {
     "z": Polynomial([oz, dz]),
 }
 if __name__ == "__main__":
-    surface_name = "sphere"
-    surface_eq = x ** 2 + y ** 2 + z ** 2 - 1.0
+
+    R = 0.7
+    r = 0.3
+    R2 = R * R
+    r2 = r * r
+
+    quadric = x ** 2 + y ** 2 + z ** 2 + R2 - r2
+
+    surface_name = "torus"
+    surface_eq = quadric ** 2 - 4.0 * R2 * (x ** 2 + y ** 2)
+
+    RAY_PROTOCOL = ["ox", "oy", "oz", "dx", "dy", "dz", "O2", "D2", "OD"]
+    POINT_PROTOCOL = ["x", "y", "z"]
 
     print("=" * 80)
     print(f"COMPILER SUITE: ANALYZING {surface_name}")
@@ -32,6 +43,14 @@ if __name__ == "__main__":
     print(f"    ∂f/∂x : {dfx}")
     print(f"    ∂f/∂y : {dfy}")
     print(f"    ∂f/∂z : {dfz}")
+
+    print(f"  • Gradient ∇f (Normal vectors) :")
+    _, code_dfx = generate_python_function(dfx)
+    _, code_dfy = generate_python_function(dfy)
+    _, code_dfz = generate_python_function(dfz)
+    print(f"    ∂f/∂x : {code_dfx}")
+    print(f"    ∂f/∂y : {code_dfy}")
+    print(f"    ∂f/∂z : {code_dfz}")
 
     # ray injection
     print(f"\n[ PHASE 2 ] RAY PARAMETERIZATION")
@@ -56,7 +75,7 @@ if __name__ == "__main__":
     print(f"  Generating kernel functions for real-time evaluation...")
 
     for i, opt in enumerate(optimized_coeffs):
-        _, code = generate_python_function(opt)
+        _, code = generate_python_function(opt, RAY_PROTOCOL)
         print(f"\n--- Kernel for t^{i} ---")
         indented_code = "  " + code.replace("\n", "\n  ")
         print(indented_code)
@@ -66,7 +85,7 @@ if __name__ == "__main__":
     print(f"DAG COMPLEXITY ANALYSIS")
     print("=" * 80)
 
-    order = topo_sort(surface_eq)
+    order = topological_sort(surface_eq)
     print(f"  • Total unique operations in DAG : {len(order)}")
     print(f"  • Execution flow (Leaves to Root) :")
 
