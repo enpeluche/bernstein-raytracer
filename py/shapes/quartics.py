@@ -12,7 +12,7 @@ def steiner2(color=None, **kwargs) -> Primitive:
         - x * y * z,
         color=color,
         label="steiner2",
-        **kwargs
+        **kwargs,
     )
 
 
@@ -27,7 +27,7 @@ def steiner4(color=None, **kwargs) -> Primitive:
         - z ** 4,
         color=color,
         label="steiner4",
-        **kwargs
+        **kwargs,
     )
 
 
@@ -41,7 +41,7 @@ def roman(color=None, **kwargs) -> Primitive:
         color=color,
         aabb=AABB((-1, -1, -1), (1, 1, 1)),
         label="roman",
-        **kwargs
+        **kwargs,
     )
 
 
@@ -57,5 +57,5 @@ def torus(R: float = 0.7, r: float = 0.3, color=None, **kwargs) -> Primitive:
         color=color,
         aabb=AABB((-r - R, -r, -r - R), (r + R, r, r + R)),
         label="torus",
-        **kwargs
+        **kwargs,
     )
