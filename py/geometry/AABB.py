@@ -130,8 +130,8 @@ class AABB:
         if other is None:
             return self
 
-        if other.contains(self):
-            return None
+        # if other.contains(self):
+        #    return None
 
         return self
 

@@ -19,7 +19,7 @@ class Difference(CSGNode):
         return differ(self.left.intersection(ray), self.right.intersection(ray))
 
     def intersection(self, ray):
-        if not self.aabb.intersection(ray):
+        if self.aabb is not None and not self.aabb.intersection(ray):
             return []
 
         left_intervals = self.left.intersection(ray)
@@ -32,7 +32,7 @@ class Difference(CSGNode):
         return differ(left_intervals, right_intervals)
 
     def any_intersection(self, ray) -> bool:
-        if not self.aabb.intersection(ray):
+        if self.aabb is not None and not self.aabb.intersection(ray):
             return False
 
         # Si le côté gauche (l'objet principal) ne touche pas, c'est fini.
