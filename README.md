@@ -6,7 +6,7 @@
   <table style="margin-left: auto; margin-right: auto;">
     <tr>
       <td align="center">
-        <img src="gallery/0001.png" width="200"><br>
+        <img src="gallery/heart.gif" width="300"><br>
         <sub><b>Type:</b> Roman Surface (Z-axis rotation)<br><b>Camera:</b> Perspective</sub>
       </td>
     </tr>
@@ -17,14 +17,6 @@
 Bernstein-Ray is a research-oriented raytracer designed for rendering **algebraic implicit surfaces** defined by polynomial equations.
 
 Instead of relying on numerical ray marching, the engine computes **exact ray–surface intersections** by transforming the implicit equation into a **univariate polynomial along the ray**, then solving it using **Bernstein basis subdivision (de Casteljau algorithm)**.
-
-This approach allows robust rendering of complex algebraic surfaces such as:
-
-- Steiner surfaces
-- Roman surfaces
-- Torii
-- Taubin hearts
-- Quartic algebraic surfaces
 
 
 ## Key Features
@@ -47,6 +39,10 @@ This approach allows robust rendering of complex algebraic surfaces such as:
       <td align="center">
         <img src="gallery/roman_rotation_z.gif" width="200"><br>
         <sub><b>Type:</b> Roman Surface (Z-axis rotation)<br><b>Camera:</b> Perspective</sub>
+      </td>
+      <td align="center">
+        <img src="gallery/csg_perspectivecamera.gif" width="200"><br>
+        <sub><b>Type:</b> Roman Surface - Sphere (Z-axis rotation)<br><b>Camera:</b> Perspective</sub>
       </td>
     </tr>
   </table>
@@ -119,6 +115,29 @@ This approach allows robust rendering of complex algebraic surfaces such as:
         <img src="gallery/barillet_anim.gif" width="300"><br>
         <sub><b>Type:</b> Revolver Cylinder (CSG Animation)<br><b>Camera:</b> Orthographic</sub>
       </td>
+      <td align="center">
+        <img src="gallery/cube_rota_xyz.gif" width="300"><br>
+        <sub><b>Type:</b> Cube (CSG Animation)<br><b>Camera:</b> Perspective</sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div align="center">
+  <table style="margin-left: auto; margin-right: auto;">
+    <tr>
+      <td align="center">
+        <img src="gallery/solar_system.png" width="200"><br>
+        <sub><b>Type:</b> Solar System (CSG)<br><b>Camera:</b> Perspective</sub>
+      </td>
+      <td align="center">
+        <img src="gallery/ouioui.gif" width="200"><br>
+        <sub><b>Type:</b> CSG<br><b>Camera:</b> Perspective</sub>
+      </td>
+      <td align="center">
+        <img src="gallery/render_beautiful.png" width="200"><br>
+        <sub><b>Type:</b> CSG<br><b>Camera:</b> Perspective</sub>
+      </td>
     </tr>
   </table>
 </div>
@@ -131,35 +150,28 @@ Want to render a surface that isn't in the library yet? Adding a new algebraic s
 
 Identify the equation where f(x,y,z)=0. For the Ding-Dong surface, the equation is:
 
-x2+y2=(1−z)z2⟹x2+y2−(1−z)z2=0
+$$x^2+y^2=(1−z)z^2 => x^2+y^2−(1−z)z^2=0$$
 
-Degree: 3 (Cubic)
+- **Degree**: 3 (Cubic)
+- **Domain Analysis**: For the surface to exist ($x^2+y^2 \geq 0$), we need $(1−z)\geq 0$, meaning $z \in ]− \infty ,1]$.
 
-Domain Analysis: For the surface to exist (x2+y2≥0), we need (1−z)≥0, meaning z∈[−∞,1].
 
-
-Step 2: Define the Primitive
+### Step 2: Define the Primitive
 
 Add the following function to py/shapes/cubics.py.
 
-    Note on AABB: Providing an Axis-Aligned Bounding Box (AABB) is optional but highly recommended. It significantly speeds up rendering by telling the raytracer exactly where to look for the surface.
+Note on AABB: Providing an Axis-Aligned Bounding Box (AABB) is optional but highly recommended. It significantly speeds up rendering by telling the raytracer exactly where to look for the surface.
 
 
-on doit avoir (1-z) z^2 > 0 donc 1-z >0 donc z in -infini, 1
 
-on peut donc englober d'une AABB
-
--infini, -infini, -infini
-infini, infini, 1
-
-```
+```python
 def dingdong(color=None, **kwargs) -> Primitive:
     # Define the symbolic expression
     expr = x**2 + y**2 - (1 - z) * z**2
 
     # Define the bounding box (Min_X, Min_Y, Min_Z, Max_X, Max_Y, Max_Z)
     # Even if Z goes to -infinity, we bound it for the render view.
-    aabb = (-1.5, -1.5, -1.0, 1.5, 1.5, 1.0)
+    aabb = (-float("inf"), -float("inf"), -float("inf"), float("inf"), float("inf"), 1.0)
 
     return Primitive(
         implicit_function=expr, 
@@ -171,46 +183,45 @@ def dingdong(color=None, **kwargs) -> Primitive:
 ```
 
 
-Step 3: Register the Surface
+### Step 3: Register the Surface
 
 To make it accessible, update the __init__.py or the import section of your main script:
 
 
-from .cubics import cayley, whitney_umbrella
-
-devient
-
+```python
 from .cubics import cayley, whitney_umbrella, dingdong
+```
 
-Step 4: Render!
+### Step 4: Render!
 
 Now you can use it in your scene just like any other shape:
 
 
-
+```python
 shape = dingdong(color=RED).rotate_x(DEG * 90)
+```
 
 # How it works
 ## Ray–Surface Intersection
 
 Given an implicit surface
 
-f(x,y,z) = 0
+$$f(x,y,z) = 0$$
 
 and a ray
 
-r(t) = o + t d
+$$r(t) = o + t d$$
 
 we substitute the ray equation into the surface:
 
-g(t) = f(o + t d)
+$$g(t) = f(o + t d)$$
 
 For algebraic surfaces this produces a **polynomial in t**.
 
-Example:
+**Example:**
 
-Torus → degree 4 polynomial  
-Taubin heart → degree 6 polynomial
+- Torus → degree 4 polynomial  
+- Taubin heart → degree 6 polynomial
 
 The roots of g(t) correspond to ray–surface intersections.
 
@@ -219,6 +230,53 @@ based on the **de Casteljau algorithm**, which provides robust root finding
 without requiring explicit polynomial solving.
 
 
-Performance
+## Benchmarks
 
-Future work
+Resolution of 1000^2, Orthographic camera, Pypy 3 (3.10.14), 30 runs
+
+| Shape (Degree) | Mean   | Std Dev | Var    | RSD     | min    | max    | time/px |
+|:--------------:|:------:|:-------:|:------:|:-------:|:------:|:------:|:-------:|
+| Sphere (2)     | 4.29s  | 0.159s  | 0.025s²| ± 3.69% | 4.085s | 4.626s | 4.29µs  |
+| Lens(0.7,0.2)  | 2.61s  | 0.077s  | 0.006s²| ± 2.53% | 2.499s | 2.919s | 2.61µs  |
+| Ding-Dong (3)  | 11.91s | 0.421s  | 0.177s²| ± 3.53% | 10.847s| 12.197s| 11.9µs  |
+| Roman (4)      | 6.2s   | 0.064s  | 0.004s²| ± 1.02% | 6.134s | 6.357s | 6.2µs   |
+| Taubin (6)     | 26.04s | 0.553s  | 0.306s²| ± 2.13% | 24.45s | 26.927s| 26µs    |
+
+
+
+| Shape (Degree) | Mean   | Std Dev | Var    | RSD     | min    | max    | time/px |
+|:--------------:|:------:|:-------:|:------:|:-------:|:------:|:------:|:-------:|
+| Sphere (2)     | 4.29s  | 0.159s  | 0.025s²| ± 3.69% | 4.085s | 4.626s | 4.29µs  |
+| S_4 (4)        | 20.833s| 0.529s  | 0.279s²| ± 2.54% | 19.181s|22.368s | 20.83µs |
+| S_6 (6)        | 34.755s| 0.275s  | 0.076s²| ± 0.79% | 33.812s|35.217s | 34.75µs |
+| S_8 (8)        | 37.700s| 0.706s  | 0.498s²| ± 1.87% | 35.290s|38.427s | 37.70µs |
+| S_10 (10)      | 40.863s| 0.588s  | 0.345s²| ± 1.44% | 38.580s|41.841s | 40.86µs |
+
+
+### Key Takeaways
+* **Degree is not everything:** The mathematical degree is not always the dominant performance bottleneck (e.g., the degree 4 Roman surface renders faster than the degree 3 Ding-Dong). The shape's topology and gradient play a massive role in root-finding speed.
+* **AABB Filtering is critical:** The CSG Lens performs remarkably fast, proving that aggressive bounding box culling successfully skips heavy polynomial evaluations.
+* **DAG Optimization:** Simplifying the Directed Acyclic Graph (DAG) by minimizing transformations and CSG nesting is crucial for maintaining low render times.
+
+
+
+## Future Work & Known Limitations
+
+Building a robust symbolic raytracer is an ongoing mathematical challenge. While the core Bernstein solver is highly stable, there are several edge cases and optimizations planned for future releases:
+
+* **Open vs. Closed Surface Topology:**
+    * *The Issue:* Currently, open surfaces (like the Hyperbolic Cylinder or Hyperbolic Paraboloid) struggle to render correctly. The engine's interval logic assumes all objects enclose a solid volume ($f < 0$ means "inside"). This breaks down for non-manifold, infinitely open sheets.
+    * *The Fix:* Introduce an explicit `is_closed` flag in the `Primitive` class to branch the rendering logic, allowing for both "solid CSG" objects and "thin-shell" open surfaces.
+
+* **Granular Artifacts on Odd-Degree Surfaces:**
+    * Surfaces defined by odd-degree polynomials occasionally exhibit grainy or stippled artifacts. This requires refining the root-finding precision and interval merging logic when polynomial tails go to positive/negative infinity.
+
+* **Camera Projection Clipping (The "Half-Cube" Bug):**
+    * There is a known issue where CSG-based objects (like a Box made of 6 Half-spaces) only render halfway under certain camera projections (Orthographic / Perspective). This requires a deep dive into how ray origins interact with AABB boundaries and `t_min` clamping.
+
+* **Optimization: Descartes' Rule of Signs:**
+    * *The Goal:* Upgrade the early-exit `has_root()` method. By analyzing the coefficient sign changes using **Descartes' Rule of Signs**, the engine will be able to instantly detect if a segment has zero roots, bypassing the heavy Bernstein subdivision entirely for massive performance gains.
+
+* **Make an Animation Class:**
+    * *The Goal:* Build a dedicated module to render time-based sequences directly from the engine, outputting ready-to-use frame sequences.
+    * *Features:* Support for keyframe interpolation on camera paths, object transformations (translation/rotation), and dynamic algebraic coefficients (e.g., morphing a shape's defining equation over time).
