@@ -18,6 +18,10 @@ Bernstein-Ray is a research-oriented raytracer designed for rendering **algebrai
 
 Instead of relying on numerical ray marching, the engine computes **exact ray–surface intersections** by transforming the implicit equation into a **univariate polynomial along the ray**, then solving it using **Bernstein basis subdivision (de Casteljau algorithm)**.
 
+## News
+
+📖 You can find a detailed article about the math and logic behind this project on my blog: 
+👉 [Read the article here](https://enpeluche.github.io/blog/?post=2026-03-15-raytracing_00)
 
 ## Key Features
 
