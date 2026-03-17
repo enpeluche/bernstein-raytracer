@@ -13,4 +13,4 @@ RUN chown -R appuser:appuser /app
 
 USER appuser
 
-CMD ["pypy3", "py/main.py"]
+CMD ["pypy3", "src/main.py"]
