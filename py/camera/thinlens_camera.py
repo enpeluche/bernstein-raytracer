@@ -53,4 +53,4 @@ class ThinLensCamera(Camera):
         origin = self.camera_to_world_point(*origin_local)
         direction = self.camera_to_world_vector(*direction_local)
 
-        return Ray(origin=origin, direction=normalize3(direction))
+        return Ray(origin=origin, direction=direction)

@@ -59,4 +59,4 @@ class PerspectiveCamera(Camera):
         # Pour une caméra ortho, tous les rayons vont vers l'avant (Forward = dy local)
         direction = self.camera_to_world_vector(x, y, z)
 
-        return Ray(origin=origin, direction=normalize3(direction))
+        return Ray(origin=origin, direction=direction)

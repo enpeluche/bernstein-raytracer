@@ -3,8 +3,6 @@ from Ray import Ray
 
 from math import tan, radians
 
-from util import normalize3
-
 
 class FOVPerspectiveCamera(Camera):
     def __init__(self, *args, fov_deg=60.0, **kwargs):
@@ -23,4 +21,4 @@ class FOVPerspectiveCamera(Camera):
         origin = self.camera_to_world_point(0.0, 0.0, 0.0)
         direction = self.camera_to_world_vector(x, y, z)
 
-        return Ray(origin=origin, direction=normalize3(direction))
+        return Ray(origin=origin, direction=direction)

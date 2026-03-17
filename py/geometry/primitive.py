@@ -221,7 +221,7 @@ class Primitive(GeometryObject):
 
         intervals = []
 
-        if len(roots) == 1:
+        if len(POL.coefficients) == 2 and len(roots) == 1:  # degré 1
             root = roots[0]
             if root > ray.t_max:
                 return []
@@ -232,9 +232,88 @@ class Primitive(GeometryObject):
             hit = self.evaluate_hit(local_ray, root)
             return [Interval(hit, hit)]
 
+        if len(POL.coefficients) == 3:  # degré 2
+            if len(roots) == 1:
+                root = roots[0]
+                if root > ray.t_max:
+                    return []
+
+                if root < ray.t_min:
+                    root = ray.t_min
+
+                hit = self.evaluate_hit(local_ray, root)
+                return [Interval(hit, hit)]
+            if len(roots) == 2:  # 2 racines
+                impact_time_in = roots[0]
+                impact_time_out = roots[1]
+
+                hit_a = self.evaluate_hit(local_ray, impact_time_in)
+                hit_b = self.evaluate_hit(local_ray, impact_time_out)
+
+                intervals.append(Interval(hit_a, hit_b))
+
+                return intervals
+
+        eps = 1e-9
+        events = []
+
+        # 1. Qualification des racines (L'approche Epsilon)
+        for root in roots:
+            # On regarde les valeurs justes avant et juste après
+            val_before = POL(root - eps)
+            val_after = POL(root + eps)
+
+            # On classifie selon le changement de signe
+            if val_before > 0 and val_after <= 0:
+                events.append(("IN", root))
+            elif val_before < 0 and val_after >= 0:
+                events.append(("OUT", root))
+            else:
+                # Aucun changement de signe = Tangence ou Singularité (le "manche" de Whitney)
+                events.append(("TOUCH", root))
+
+        intervals = []
+        current_in = None
+
+        # On regarde si on commence à l'intérieur de la scène
+        if POL(local_ray.t_min) < 0:
+            current_in = local_ray.t_min
+
+        for event_type, root in events:
+
+            if event_type == "IN":
+                current_in = root
+
+            elif event_type == "OUT":
+                # On a une sortie ! Si on avait un IN, on ferme la paire.
+                # Si current_in est None, ça veut dire qu'on a commencé "Dedans" au t_min
+                start_t = current_in if current_in is not None else local_ray.t_min
+
+                hit_a = self.evaluate_hit(local_ray, start_t)
+                hit_b = self.evaluate_hit(local_ray, root)
+                intervals.append(Interval(hit_a, hit_b))
+                current_in = None  # On réinitialise pour la prochaine paire
+
+            elif event_type == "TOUCH":
+                # Les tangences ou singularités (Whitney).
+                # On crée un intervalle d'épaisseur zéro pour forcer l'affichage de la surface
+                hit = self.evaluate_hit(local_ray, root)
+                intervals.append(Interval(hit, hit))
+
+        # Si on finit la boucle en étant toujours 'IN', on sort à l'infini (t_max)
+        if current_in is not None:
+            hit_a = self.evaluate_hit(local_ray, current_in)
+            hit_b = self.evaluate_hit(local_ray, local_ray.t_max)
+            intervals.append(Interval(hit_a, hit_b))
+
+        return intervals
+
         # Création des intervalles par paires (Entrée -> Sortie)
         for i in range(0, len(roots) - 1):
             impact_time_in = roots[i]
+            # on doit regarder les signes de POL(roots[i] - epsilon) et POL(roots[i] + epsilon)
+            # on doit regarder les signes de POL(roots[i+1] - epsilon) et POL(roots[i+1] + epsilon)
+            # si ya pas de changement de signe : tangante donc on oubli la racine ?
             impact_time_out = roots[i + 1]
 
             mid_t = (impact_time_in + impact_time_out) * 0.5

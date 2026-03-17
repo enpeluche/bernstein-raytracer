@@ -3,8 +3,6 @@ from Ray import Ray
 
 from math import sin, cos, radians
 
-from util import normalize3
-
 
 class CylindricalCamera(Camera):
     def __init__(self, *args, fov_deg=180.0, **kwargs):
@@ -24,4 +22,4 @@ class CylindricalCamera(Camera):
         origin = self.camera_to_world_point(0.0, 0.0, 0.0)
         direction = self.camera_to_world_vector(x, y, z)
 
-        return Ray(origin=origin, direction=normalize3(direction))
+        return Ray(origin=origin, direction=direction)
