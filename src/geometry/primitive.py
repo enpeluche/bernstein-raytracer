@@ -98,7 +98,7 @@ class Primitive(GeometryObject):
 
         return self
 
-    def evaluate_hit(self, local_ray, t: float) -> RayHit:
+    def evaluate_hit(self, local_ray, t: float, debug: bool = False) -> RayHit:
         """Compute geometric intersection details for a ray-surface hit.
 
         Calculates the 3D impact point using the ray parameter t, evaluates the
@@ -156,7 +156,7 @@ class Primitive(GeometryObject):
             # 4. Normale dans le repère parent.
             world_normal = Primitive._local_to_world_normal(local_normal, m_bwd)
 
-        return RayHit(
+        hit = RayHit(
             self,
             t,
             local_impact_point,
@@ -165,6 +165,25 @@ class Primitive(GeometryObject):
             world_normal,
             is_front_face,
         )
+
+        if debug:
+            print("\n===== RAY HIT =====")
+            print(f"Distance (t) : {t:.5f}")
+            print(
+                f"Local Hit    : ({hit.local_impact_point[0]: 8.3f}, {hit.local_impact_point[1]: 8.3f}, {hit.local_impact_point[2]: 8.3f})"
+            )
+            print(
+                f"World Hit    : ({hit.world_impact_point[0]: 8.3f}, {hit.world_impact_point[1]: 8.3f}, {hit.world_impact_point[2]: 8.3f})"
+            )
+            print(
+                f"Local Normal : ({hit.local_normal[0]: 8.3f}, {hit.local_normal[1]: 8.3f}, {hit.local_normal[2]: 8.3f})"
+            )
+            print(
+                f"World Normal : ({hit.world_normal[0]: 8.3f}, {hit.world_normal[1]: 8.3f}, {hit.world_normal[2]: 8.3f})"
+            )
+            print(f"Front Face   : {hit.is_front_face}")
+
+        return hit
 
     def any_intersection(self, ray) -> bool:
         """
@@ -189,14 +208,22 @@ class Primitive(GeometryObject):
 
         return Polynomial(numeric_coeffs).has_any_root(local_ray.t_min, local_ray.t_max)
 
-    def intersection(self, ray):
+    def intersection(self, ray, debug=False):
         """Trouve les intervalles d'intersection entre un rayon et la surface."""
+
+        if debug:
+            print("=====WORLD RAY=====")
+            print(ray)
 
         # Early-exit optimization: Since the AABB and the ray are both in world space,
         # we perform a world-space intersection test first. If the ray misses the
         # bounding box, we avoid the computational overhead.
         if not self.aabb.intersection(ray):
             return []
+
+        if debug:
+            print("=====AABB=====")
+            print(self.aabb.intersection(ray))
 
         # Map the world-space ray into the object's local (canonical) space
         # using the inverse transformation.
@@ -206,13 +233,65 @@ class Primitive(GeometryObject):
             else ray
         )
 
+        if debug:
+            print("=====LOCAL RAY=====")
+            print(local_ray)
+
         numeric_coeffs = self.f_evaluator(*local_ray.eval_params)
+
+        if debug:
+            # On formate uniquement pour le confort visuel (5 chiffres après la virgule)
+            coeffs_lisibles = [f"{c:.5f}" for c in numeric_coeffs]
+            print(f"coefficients of polynomial : {coeffs_lisibles}")
 
         POL = Polynomial(numeric_coeffs)
 
         # Extract real roots via Bernstein basis subdivision. The de Casteljau-based
         # algorithm inherently produces roots in ascending order.
         roots = POL.roots(local_ray.t_min, local_ray.t_max)
+
+        if debug:
+            print(f"roots : {roots}")
+
+        roots = [r for r in roots if local_ray.t_min + EPSILON < r < local_ray.t_max]
+
+        if debug:
+            import matplotlib.pyplot as plt
+
+            # On crée 200 points entre t=0 et t=max(roots) + 1 (pour voir un peu après)
+            t_fin = max(roots) + 1.0 if roots else 10.0
+            t_vals = [t_fin * i / 200.0 for i in range(201)]
+            y_vals = [POL(t) for t in t_vals]
+
+            plt.figure(figsize=(8, 4))
+            plt.title("Profil de l'intersection P(t)")
+
+            # La courbe du polynôme
+            plt.plot(t_vals, y_vals, label="P(t)", color="blue")
+
+            # La ligne zéro (le rayon de lumière)
+            plt.axhline(0, color="red", linestyle="--", label="Rayon (Zéro)")
+
+            # On place des gros points verts sur les racines trouvées
+            for r in roots:
+                plt.scatter([r], [0], color="green", zorder=5, s=80)
+                plt.annotate(
+                    f"t={r:.3f}",
+                    (r, 0),
+                    textcoords="offset points",
+                    xytext=(0, 10),
+                    ha="center",
+                )
+
+            # ... (tout le code de configuration du plot reste identique) ...
+            plt.legend()
+            plt.grid(True)
+
+            # 1. On sauvegarde l'image dans le dossier partagé
+            plt.savefig("debug_pixel_graph.png")
+
+            # 2. On ferme la figure pour libérer la mémoire
+            plt.close()
 
         # "I've got no roots..." — Alice Merton.
         # Early exit: the ray misses the surface geometry entirely.
@@ -229,7 +308,7 @@ class Primitive(GeometryObject):
             if root < ray.t_min:
                 root = ray.t_min
 
-            hit = self.evaluate_hit(local_ray, root)
+            hit = self.evaluate_hit(local_ray, root, debug=debug)
             return [Interval(hit, hit)]
 
         if len(POL.coefficients) == 3:  # degré 2
@@ -247,8 +326,8 @@ class Primitive(GeometryObject):
                 impact_time_in = roots[0]
                 impact_time_out = roots[1]
 
-                hit_a = self.evaluate_hit(local_ray, impact_time_in)
-                hit_b = self.evaluate_hit(local_ray, impact_time_out)
+                hit_a = self.evaluate_hit(local_ray, impact_time_in, debug=debug)
+                hit_b = self.evaluate_hit(local_ray, impact_time_out, debug=debug)
 
                 intervals.append(Interval(hit_a, hit_b))
 
@@ -331,8 +410,8 @@ class Primitive(GeometryObject):
                     impact_time_in = ray.t_min
 
                 #  ici avec cette méthode le repère parent est le monde
-                hit_a = self.evaluate_hit(local_ray, impact_time_in)
-                hit_b = self.evaluate_hit(local_ray, impact_time_out)
+                hit_a = self.evaluate_hit(local_ray, impact_time_in, debug=debug)
+                hit_b = self.evaluate_hit(local_ray, impact_time_out, debug=debug)
 
                 intervals.append(Interval(hit_a, hit_b))
 
@@ -392,7 +471,7 @@ class Primitive(GeometryObject):
         # Normalisation finale pour TOUS les cas qui ont survécu
         return normalize3((nx, ny, nz))
 
-    def get_surface_color(self, rayHit):
+    def get_surface_color(self, rayHit, debug=False):
         """Pipeline de surface : calcule la teinte finale de l'objet (Local)."""
 
         # 1. On part de la couleur de base (avec gestion Dual Color)

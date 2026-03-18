@@ -116,3 +116,23 @@ class Ray:
             t_min=self.t_min,
             t_max=self.t_max,
         )
+
+    def __str__(self) -> str:
+        """Affichage formaté et lisible du rayon pour le débogage."""
+        ox, oy, oz = self.origin
+        dx, dy, dz = self.direction
+
+        # On formate les flottants avec 3 décimales pour aligner le texte proprement
+        return (
+            f"Ray(\n"
+            f"  Origin:    ({ox: 8.3f}, {oy: 8.3f}, {oz: 8.3f})\n"
+            f"  Direction: ({dx: 8.3f}, {dy: 8.3f}, {dz: 8.3f})\n"
+            f"  Bounds:    [{self.t_min}, {self.t_max}]\n"
+            f")"
+        )
+
+    def __repr__(self) -> str:
+        """Affichage compact pour les listes ou l'interpréteur."""
+        ox, oy, oz = self.origin
+        dx, dy, dz = self.direction
+        return f"<Ray O({ox:.2f}, {oy:.2f}, {oz:.2f}) D({dx:.2f}, {dy:.2f}, {dz:.2f})>"

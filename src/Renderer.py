@@ -26,7 +26,9 @@ class Renderer:
         # print(msg.ljust(50), end="\r", flush=True)
 
         start = time.perf_counter()
-        frame = self.scene.raycasting()
+        frame = self.scene.raycasting(
+            debug_pixels={}
+        )  # debug_pixels={(177, 150), (177, 175), (177, 200)}
         end = time.perf_counter()
 
         self.total_time += end - start
