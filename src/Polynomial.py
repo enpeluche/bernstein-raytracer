@@ -15,7 +15,7 @@ def unique_with_epsilon(values):
     values = sorted(values)
     result = []
     for v in values:
-        if not result or abs(v - result[-1]) > 1e-5:
+        if not result or abs(v - result[-1]) > 1e-4:
             result.append(v)
     return result
 
@@ -307,7 +307,7 @@ class Polynomial:
             other_roots = Polynomial(P.coefficients[1:]).roots(t_min, t_max)
 
             # On combine 0.0 avec les autres racines en garantissant l'unicité
-            return unique_with_epsilon(other_roots)
+            return unique_with_epsilon([0.0] + other_roots)
 
         # --- CAS ANALYTIQUES (Optimisation pour les formes de base) ---
 
@@ -319,6 +319,7 @@ class Polynomial:
 
         # Degré 1 : Équation linéaire a*t + b = 0.
         # t = -b / a. Représente l'intersection avec un plan.
+        # TODO :  vérifier que ici c'est cohérent, car on vérifie pas si a != 0
 
         if P.len == 2:
             root = -P.coefficients[0] / P.coefficients[1]
@@ -397,7 +398,7 @@ class Polynomial:
         if not solutions:
             return []
 
-        return unique_with_epsilon(solutions)
+        return sorted(unique_with_epsilon(solutions))
 
     def has_any_root(self, t_min: float, t_max: float) -> bool:
         """Détermine si au moins une racine existe dans [t_min, t_max]."""
