@@ -12,13 +12,13 @@ class Intersection(CSGNode):
 
         self.aabb = left.aabb & right.aabb
 
-    def intersection(self, ray):
+    def intersection(self, ray, debug=False):
         if not self.aabb.intersection(ray):
             return []
 
         return inter(self.left.intersection(ray), self.right.intersection(ray))
 
-    def any_intersection(self, ray) -> bool:
+    def any_intersection(self, ray, debug=False) -> bool:
         if not self.aabb.intersection(ray):
             return False
 

@@ -59,11 +59,14 @@ class Primitive(GeometryObject):
         transformation=None,
         aabb=None,
         label="unknown",
+        debug=False,
     ):
         from .AABB import AABB
         from ..util import random_color
 
-        analyze_primitive_compiler(implicit_function, label, env)
+        if debug:
+            analyze_primitive_compiler(implicit_function, label, env)
+
         Pf = implicit_function.to_polynomial(env)
         Pf_opt = [optimize_patterns(c) for c in Pf.coefficients]
         self.f_evaluator, _ = compile_dag_evaluator(Pf_opt, forced_args=RAY_PROTOCOL)
@@ -175,22 +178,7 @@ class Primitive(GeometryObject):
         )
 
         if debug:
-            print("\n===== RAY HIT =====")
-            print(f"Distance (t) : {t:.5f}")
-            print(
-                f"Local Hit    : ({hit.local_impact_point[0]: 8.3f}, {hit.local_impact_point[1]: 8.3f}, {hit.local_impact_point[2]: 8.3f})"
-            )
-            print(
-                f"World Hit    : ({hit.world_impact_point[0]: 8.3f}, {hit.world_impact_point[1]: 8.3f}, {hit.world_impact_point[2]: 8.3f})"
-            )
-            print(
-                f"Local Normal : ({hit.local_normal[0]: 8.3f}, {hit.local_normal[1]: 8.3f}, {hit.local_normal[2]: 8.3f})"
-            )
-            print(
-                f"World Normal : ({hit.world_normal[0]: 8.3f}, {hit.world_normal[1]: 8.3f}, {hit.world_normal[2]: 8.3f})"
-            )
-            print(f"Front Face   : {hit.is_front_face}")
-
+            print(hit)
         return hit
 
     def any_intersection(self, ray) -> bool:
@@ -220,18 +208,18 @@ class Primitive(GeometryObject):
         """Trouve les intervalles d'intersection entre un rayon et la surface."""
 
         if debug:
-            print("=====WORLD RAY=====")
-            print(ray)
+            print(f"    World {ray}")
 
         # Early-exit optimization: Since the AABB and the ray are both in world space,
         # we perform a world-space intersection test first. If the ray misses the
         # bounding box, we avoid the computational overhead.
-        if not self.aabb.intersection(ray):
-            return []
+        is_aabb_hit = self.aabb.intersection(ray)
 
         if debug:
-            print("=====AABB=====")
-            print(self.aabb.intersection(ray))
+            print(f"    AABB Hit  : {is_aabb_hit}")
+
+        if not is_aabb_hit:
+            return []
 
         # Map the world-space ray into the object's local (canonical) space
         # using the inverse transformation.
@@ -242,8 +230,7 @@ class Primitive(GeometryObject):
         )
 
         if debug:
-            print("=====LOCAL RAY=====")
-            print(local_ray)
+            print(f"    Local {local_ray}")
 
         numeric_coeffs = self.f_evaluator(*local_ray.eval_params)
 

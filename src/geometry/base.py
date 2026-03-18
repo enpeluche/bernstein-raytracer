@@ -8,7 +8,7 @@ class GeometryObject:
 
     __slots__ = ("aabb",)
 
-    def intersection(self, ray):
+    def intersection(self, ray, debug=False):
         raise NotImplementedError
 
     def normal_at(self, x, y, z):

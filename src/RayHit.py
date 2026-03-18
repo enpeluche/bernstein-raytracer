@@ -71,12 +71,8 @@ class RayHit:
                 impact time, parent coordinates, and normal vector.
         """
         face = "Front" if self.is_front_face else "Back"
-        px, py, pz = self.world_impact_point
-        nx, ny, nz = self.world_normal
-
         return (
-            f"RayHit(face={face}, time={self.impact_time:.3f}, "
-            f"pos=({px:.3f}, {py:.3f}, {pz:.3f}), "
-            f"norm=({nx:.3f}, {ny:.3f}, {nz:.3f}), "
-            f"color={self.primitive.color})"
+            f"Impact on {face} of {self.primitive.label} at t={self.impact_time:.3f} :\n"
+            f"Hit  (Loc|Wld) : ({self.local_impact_point[0]: 8.3f}, {self.local_impact_point[1]: 8.3f}, {self.local_impact_point[2]: 8.3f}) | ({self.world_impact_point[0]: 8.3f}, {self.world_impact_point[1]: 8.3f}, {self.world_impact_point[2]: 8.3f})\n"
+            f"Norm (Loc|Wld) : ({self.local_normal[0]: 8.3f}, {self.local_normal[1]: 8.3f}, {self.local_normal[2]: 8.3f}) | ({self.world_normal[0]: 8.3f}, {self.world_normal[1]: 8.3f}, {self.world_normal[2]: 8.3f})"
         )

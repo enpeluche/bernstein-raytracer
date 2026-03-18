@@ -117,22 +117,20 @@ class Ray:
             t_max=self.t_max,
         )
 
-    def __str__(self) -> str:
-        """Affichage formaté et lisible du rayon pour le débogage."""
-        ox, oy, oz = self.origin
-        dx, dy, dz = self.direction
-
-        # On formate les flottants avec 3 décimales pour aligner le texte proprement
-        return (
-            f"Ray(\n"
-            f"  Origin:    ({ox: 8.3f}, {oy: 8.3f}, {oz: 8.3f})\n"
-            f"  Direction: ({dx: 8.3f}, {dy: 8.3f}, {dz: 8.3f})\n"
-            f"  Bounds:    [{self.t_min}, {self.t_max}]\n"
-            f")"
-        )
-
     def __repr__(self) -> str:
-        """Affichage compact pour les listes ou l'interpréteur."""
+        """
+        Représentation compacte et rigoureusement alignée pour les logs de raytracing.
+        Conçue pour rester lisible même dans des listes contenant des centaines de rayons.
+        """
         ox, oy, oz = self.origin
         dx, dy, dz = self.direction
-        return f"<Ray O({ox:.2f}, {oy:.2f}, {oz:.2f}) D({dx:.2f}, {dy:.2f}, {dz:.2f})>"
+
+        # Formatage intelligent des limites (t_max à 1e10 est illisible, on le simplifie)
+        t_max_str = "+∞" if self.t_max >= 1e9 else f"{self.t_max:.3f}"
+        t_min_str = f"{self.t_min:.0e}" if self.t_min < 0.001 else f"{self.t_min:.3f}"
+
+        return (
+            f"Ray [ O: ({ox: 8.3f}, {oy: 8.3f}, {oz: 8.3f}) | "
+            f"D: ({dx: 8.3f}, {dy: 8.3f}, {dz: 8.3f}) | "
+            f"t: [{t_min_str}, {t_max_str}] ]"
+        )

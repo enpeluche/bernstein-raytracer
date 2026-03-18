@@ -12,7 +12,7 @@ class Union(CSGNode):
 
         self.aabb = left.aabb + right.aabb
 
-    def intersection(self, ray):
+    def intersection(self, ray, debug=False):
         if not self.aabb.intersection(ray):
             return []
 

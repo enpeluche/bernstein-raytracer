@@ -12,13 +12,13 @@ class Difference(CSGNode):
 
         self.aabb = left.aabb - right.aabb
 
-    def _intersection(self, ray):
+    def _intersection(self, ray, debug=False):
         if not self.aabb.intersection(ray):
             return []
 
         return differ(self.left.intersection(ray), self.right.intersection(ray))
 
-    def intersection(self, ray):
+    def intersection(self, ray, debug=False):
         if self.aabb is not None and not self.aabb.intersection(ray):
             return []
 

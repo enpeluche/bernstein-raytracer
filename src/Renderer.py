@@ -27,7 +27,7 @@ class Renderer:
 
         start = time.perf_counter()
         frame = self.scene.raycasting(
-            debug_pixels={}
+            debug_pixels={(177, 150), (177, 175), (177, 200)}
         )  # debug_pixels={(177, 150), (177, 175), (177, 200)}
         end = time.perf_counter()
 
