@@ -65,6 +65,7 @@ quartics = [
     torus(0.7, 0.3).scale(0.9, 0.9, 0.9),
 ]
 
+debug = [whitney_umbrella(color=(255, 255, 255), show_grid=True)]
 
 sextics = [taubin_heart(color=(240, 47, 79)).scale(0.7, 0.7, 0.7).rotate_y(180 * DEG)]
 
@@ -88,8 +89,8 @@ demo_full_suite(paraboloids, my_cameras, "quadrics/paraboloids")
 demo_full_suite(cubics, my_cameras, "cubics")
 demo_full_suite(quartics, my_cameras, "quartics")
 demo_full_suite(sextics, my_cameras, "sextics")
-# demo_full_suite(superquadrics, my_cameras, "superquadratics")
-
+demo_full_suite(superquadrics, my_cameras, "superquadratics")
+demo_full_suite(debug, [camera_0], "debug")
 # une render distance
 
 # différent pdv ? pour un format png

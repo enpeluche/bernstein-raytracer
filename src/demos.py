@@ -5,8 +5,8 @@ from .shapes import *
 from .Renderer import *
 
 camera_0 = PerspectiveCamera(
-    origin=(0.0, -3, 0.0),
-    view_direction=(0.0, 1.0, 0.0),
+    origin=(3, -5, 3),
+    view_direction=(-3, 5, -3),
     light_dir=(1, -2, 0.75),
     name="perspectivecamera",
     focale=1.5,
@@ -22,8 +22,8 @@ camera_1 = OrthographicCamera(
 
 
 camera_2 = FOVPerspectiveCamera(
-    origin=(0.0, -2.0, 0.0),
-    view_direction=(0.0, 1.0, 0.0),
+    origin=(1.0, -2.0, 0.0),
+    view_direction=(-1.0, 2.0, 0.0),
     light_dir=(1.0, -2.0, 0.75),
     name="fovperspectivecamera",
     fov_deg=60.0,
@@ -31,8 +31,8 @@ camera_2 = FOVPerspectiveCamera(
 
 
 camera_3 = FisheyeCamera(
-    origin=(0.0, -1.5, 0.0),
-    view_direction=(0.0, 1.0, 0.0),
+    origin=(0.0, -1.5, -0.2),
+    view_direction=(0.0, 1.5, 0.2),
     light_dir=(1.0, -2.0, 0.75),
     name="fisheyecamera",
     fov_deg=90.0,
