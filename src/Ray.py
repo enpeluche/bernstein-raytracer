@@ -30,8 +30,8 @@ class Ray:
         origin: tuple[float, float, float],
         direction: tuple[float, float, float],
         should_normalize: bool = True,
-        t_min: float = 0,
-        t_max: float = float("inf"),
+        t_min: float = 1e-5,
+        t_max: float = 1e10,
     ) -> None:
         """
         Initialize a new ray.

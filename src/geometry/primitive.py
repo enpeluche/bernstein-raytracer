@@ -129,9 +129,17 @@ class Primitive(GeometryObject):
 
         # 3. Orientation de la face (repère local).
 
+        EPS_ORIENT = 1e-7
+
         dot_product = dot3(local_ray.direction, local_normal)
 
-        is_front_face = dot_product < 0.0
+        if dot_product < -EPS_ORIENT:
+            is_front_face = True
+        elif dot_product > EPS_ORIENT:
+            is_front_face = False
+        else:
+            # zone instable → décider de façon cohérente
+            is_front_face = True
 
         if not is_front_face:
             local_normal = (
@@ -300,7 +308,7 @@ class Primitive(GeometryObject):
 
         intervals = []
 
-        if len(POL.coefficients) == 2 and len(roots) == 1:  # degré 1
+        if len(roots) == 1:
             root = roots[0]
             if root > ray.t_max:
                 return []
@@ -312,16 +320,7 @@ class Primitive(GeometryObject):
             return [Interval(hit, hit)]
 
         if len(POL.coefficients) == 3:  # degré 2
-            if len(roots) == 1:
-                root = roots[0]
-                if root > ray.t_max:
-                    return []
 
-                if root < ray.t_min:
-                    root = ray.t_min
-
-                hit = self.evaluate_hit(local_ray, root)
-                return [Interval(hit, hit)]
             if len(roots) == 2:  # 2 racines
                 impact_time_in = roots[0]
                 impact_time_out = roots[1]
@@ -333,7 +332,7 @@ class Primitive(GeometryObject):
 
                 return intervals
 
-        eps = 1e-9
+        eps = 1e-6
         events = []
 
         # 1. Qualification des racines (L'approche Epsilon)
@@ -352,40 +351,6 @@ class Primitive(GeometryObject):
                 events.append(("TOUCH", root))
 
         intervals = []
-        current_in = None
-
-        # On regarde si on commence à l'intérieur de la scène
-        if POL(local_ray.t_min) < 0:
-            current_in = local_ray.t_min
-
-        for event_type, root in events:
-
-            if event_type == "IN":
-                current_in = root
-
-            elif event_type == "OUT":
-                # On a une sortie ! Si on avait un IN, on ferme la paire.
-                # Si current_in est None, ça veut dire qu'on a commencé "Dedans" au t_min
-                start_t = current_in if current_in is not None else local_ray.t_min
-
-                hit_a = self.evaluate_hit(local_ray, start_t)
-                hit_b = self.evaluate_hit(local_ray, root)
-                intervals.append(Interval(hit_a, hit_b))
-                current_in = None  # On réinitialise pour la prochaine paire
-
-            elif event_type == "TOUCH":
-                # Les tangences ou singularités (Whitney).
-                # On crée un intervalle d'épaisseur zéro pour forcer l'affichage de la surface
-                hit = self.evaluate_hit(local_ray, root)
-                intervals.append(Interval(hit, hit))
-
-        # Si on finit la boucle en étant toujours 'IN', on sort à l'infini (t_max)
-        if current_in is not None:
-            hit_a = self.evaluate_hit(local_ray, current_in)
-            hit_b = self.evaluate_hit(local_ray, local_ray.t_max)
-            intervals.append(Interval(hit_a, hit_b))
-
-        return intervals
 
         # Création des intervalles par paires (Entrée -> Sortie)
         for i in range(0, len(roots) - 1):
@@ -447,28 +412,30 @@ class Primitive(GeometryObject):
 
     def normal_at(self, point):
         x, y, z = point
-        try:
-            nx, ny, nz = self.df_evaluator(x, y, z)
-            # On vérifie si le vecteur est exploitable
-            if nx * nx + ny * ny + nz * nz < 1e-10:
-                raise ValueError
 
-        except ValueError:
-            eps = 1e-6
-            # On tente de fuir la singularité sur les 3 axes
-            # Axe X
-            nx, ny, nz = self.df_evaluator(x + eps, y, z)
-            if nx * nx + ny * ny + nz * nz < 1e-10:
-                # Axe Y
-                nx, ny, nz = self.df_evaluator(x, y + eps, z)
-                if nx * nx + ny * ny + nz * nz < 1e-10:
-                    # Axe Z
-                    nx, ny, nz = self.df_evaluator(x, y, z + eps)
-                    if nx * nx + ny * ny + nz * nz < 1e-10:
-                        # Désespoir total : on renvoie un vecteur unitaire par défaut
-                        return (0.0, 1.0, 0.0)
+        nx, ny, nz = self.df_evaluator(x, y, z)
+        return normalize3((nx, ny, nz))
+        # norm2 = nx * nx + ny * ny + nz * nz
 
-        # Normalisation finale pour TOUS les cas qui ont survécu
+        if norm2 < 1e-10:
+            eps = 1e-5
+
+            fx1 = self.f_evaluator(x + eps, y, z)
+            fx2 = self.f_evaluator(x - eps, y, z)
+            fy1 = self.f_evaluator(x, y + eps, z)
+            fy2 = self.f_evaluator(x, y - eps, z)
+            fz1 = self.f_evaluator(x, y, z + eps)
+            fz2 = self.f_evaluator(x, y, z - eps)
+
+            nx = fx1 - fx2
+            ny = fy1 - fy2
+            nz = fz1 - fz2
+
+            norm2 = nx * nx + ny * ny + nz * nz
+
+            if norm2 < 1e-12:
+                return None  # mieux que (0,1,0)
+
         return normalize3((nx, ny, nz))
 
     def get_surface_color(self, rayHit, debug=False):
