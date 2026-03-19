@@ -1,0 +1,20 @@
+[package]
+name = "rust_solver"
+version = "0.1.0"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "rust_solver"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = "0.27.0"
+rand = "0.8.0"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "midpoints_bench"
+harness = false
