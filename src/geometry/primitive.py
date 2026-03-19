@@ -306,45 +306,9 @@ class Primitive(GeometryObject):
             hit = self.evaluate_hit(local_ray, root, debug=debug)
             return [Interval(hit, hit)]
 
-        if len(POL.coefficients) == 3:  # degré 2
-
-            if len(roots) == 2:  # 2 racines
-                impact_time_in = roots[0]
-                impact_time_out = roots[1]
-
-                hit_a = self.evaluate_hit(local_ray, impact_time_in, debug=debug)
-                hit_b = self.evaluate_hit(local_ray, impact_time_out, debug=debug)
-
-                intervals.append(Interval(hit_a, hit_b))
-
-                return intervals
-
-        eps = 1e-6
-        events = []
-
-        # 1. Qualification des racines (L'approche Epsilon)
-        for root in roots:
-            # On regarde les valeurs justes avant et juste après
-            val_before = POL(root - eps)
-            val_after = POL(root + eps)
-
-            # On classifie selon le changement de signe
-            if val_before > 0 and val_after <= 0:
-                events.append(("IN", root))
-            elif val_before < 0 and val_after >= 0:
-                events.append(("OUT", root))
-            else:
-                # Aucun changement de signe = Tangence ou Singularité (le "manche" de Whitney)
-                events.append(("TOUCH", root))
-
-        intervals = []
-
         # Création des intervalles par paires (Entrée -> Sortie)
         for i in range(0, len(roots) - 1):
             impact_time_in = roots[i]
-            # on doit regarder les signes de POL(roots[i] - epsilon) et POL(roots[i] + epsilon)
-            # on doit regarder les signes de POL(roots[i+1] - epsilon) et POL(roots[i+1] + epsilon)
-            # si ya pas de changement de signe : tangante donc on oubli la racine ?
             impact_time_out = roots[i + 1]
 
             mid_t = (impact_time_in + impact_time_out) * 0.5
