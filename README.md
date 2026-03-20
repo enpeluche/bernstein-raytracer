@@ -61,15 +61,15 @@ Instead of relying on numerical ray marching, the engine computes **exact ray–
   <table style="margin-left: auto; margin-right: auto;">
     <tr>
       <td align="center">
-        <img src="gallery/ellipsoid_orthographiccamera.png" width="200"><br>
+        <img src="gallery/ellipsoid_orthographiccamera.jpg" width="200"><br>
         <sub><b>Type:</b> Ellipsoid<br><b>Camera:</b> Orthographic</sub>
       </td>
       <td align="center">
-        <img src="gallery/elliptic_cone_fovperspectivecamera.png" width="200"><br>
+        <img src="gallery/elliptic_cone_fovperspectivecamera.jpg" width="200"><br>
         <sub><b>Type:</b> Elliptic Cone<br><b>Camera:</b> FOV Perspective</sub>
       </td>
       <td align="center">
-        <img src="gallery/elliptic_cylinder_fisheyecamera.png" width="200"><br>
+        <img src="gallery/elliptic_cylinder_fisheyecamera.jpg" width="200"><br>
         <sub><b>Type:</b> Elliptic Cylinder<br><b>Camera:</b> Fisheye</sub>
       </td>
     </tr>
@@ -77,11 +77,11 @@ Instead of relying on numerical ray marching, the engine computes **exact ray–
   <table style="margin-left: auto; margin-right: auto;">
     <tr>
       <td align="center">
-        <img src="gallery/hyperbolic_cylinder_thinLenscamera.png" width="300"><br>
+        <img src="gallery/hyperbolic_cylinder_thinLenscamera.jpg" width="300"><br>
         <sub><b>Type:</b> Hyperbolic Cylinder<br><b>Camera:</b> Thin Lens (DOF)</sub>
       </td>
       <td align="center">
-        <img src="gallery/hyperboloid_of_two_sheets_cylindricalcamera.png" width="300"><br>
+        <img src="gallery/hyperboloid_of_two_sheets_cylindricalcamera.jpg" width="300"><br>
         <sub><b>Type:</b> Hyperboloid (2 Sheets)<br><b>Camera:</b> Cylindrical</sub>
       </td>
     </tr>
@@ -95,15 +95,15 @@ Instead of relying on numerical ray marching, the engine computes **exact ray–
   <table style="margin-left: auto; margin-right: auto;">
     <tr>
       <td align="center">
-        <img src="gallery/steiner2_cylindricalcamera.png" width="200"><br>
+        <img src="gallery/steiner2_cylindricalcamera.jpg" width="200"><br>
         <sub><b>Type:</b> Steiner Surface (Type 2)<br><b>Camera:</b> Cylindrical</sub>
       </td>
       <td align="center">
-        <img src="gallery/steiner4_thinLenscamera.png" width="200"><br>
+        <img src="gallery/steiner4_thinLenscamera.jpg" width="200"><br>
         <sub><b>Type:</b> Steiner Surface (Type 4)<br><b>Camera:</b> Thin Lens (DOF)</sub>
       </td>
       <td align="center">
-        <img src="gallery/torus_fisheyecamera.png" width="200"><br>
+        <img src="gallery/torus_fisheyecamera.jpg" width="200"><br>
         <sub><b>Type:</b> Torus<br><b>Camera:</b> Fisheye</sub>
       </td>
     </tr>
